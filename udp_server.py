@@ -11,10 +11,11 @@ class UDPServer(threading.Thread):
     UNKNOWN = 'UNKNOWN'
 
     # state will be a dict in main.py must be backed up in .txt file
-    def __init__(self, host, port, state):
+    def __init__(self, host, port, state, state_lock):
         self.host = host
         self.port = port
         self.state = state
+        self.state_lock = state_lock  # locks access to state, update .txt file while lock held
         self.continue_thread = True
         self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.udp_socket.bind((host, port))
