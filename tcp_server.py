@@ -1,5 +1,6 @@
 import threading
 import socket
+from client_connection import ClientConnection
 
 
 class TCPServer(threading.Thread):
@@ -22,17 +23,21 @@ class TCPServer(threading.Thread):
         #self.tcp_socket.listen(5)
         print("TCP connection started on server side.")
         while self.continue_thread:
-            conn, addr = self.tcp_socket.accept()
-            print("TCP connection from {}".format(str(addr)))
+            (conn, (ip, port)) = self.tcp_socket.accept()
+            print("TCP connection from ip: {} port: {}".format(str(ip), str(port)))
             #tcp_connection = threading.Thread(target=self.connection_thread, args=(conn, addr))
             #tcp_connection.start()
             #self.connection_list.append(tcp_connection)
-            data = conn.recv(1024).decode('ascii')
-            if not data:
-                print("Data is not correct")
-                break
-            print("Connection from user: " + data)
-            conn.send("Successful response over tcp".encode('ascii'))
+            newthread = ClientConnection(ip, port, conn)
+            newthread.start()
+            self.connection_list.append(newthread)
+
+            # data = conn.recv(1024).decode('ascii')
+            # if not data:
+            #     print("Data is not correct")
+            #     break
+            # print("Connection from user: " + data)
+            # conn.send("Successful response over tcp".encode('ascii'))
 
     # def add_connections(self):
     #     while True:
