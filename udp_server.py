@@ -1,7 +1,7 @@
 import threading
 import socket
 import ast
-from utils import dict_to_bytes, check_name
+from utils import dict_to_bytes, check_name, update_txt_file, recover_state
 
 
 class UDPServer(threading.Thread):
@@ -11,10 +11,11 @@ class UDPServer(threading.Thread):
     UNKNOWN = 'UNKNOWN'
 
     # state will be a dict in main.py must be backed up in .txt file
-    def __init__(self, host, port, state, state_lock):
+    def __init__(self, host, port, state, state_lock, txt_file):
         self.host = host
         self.port = port
         self.state = state
+        self.txt_file = txt_file
         self.state_lock = state_lock  # locks access to state, update .txt file while lock held
         self.continue_thread = True
         self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -40,15 +41,25 @@ class UDPServer(threading.Thread):
             and if so update internal state to reflect that as well as update the .txt file"""
         # todo some type checking for port numbers and ip addresses would be good
         name = msg_received['name']
-        ip = msg_received['ip']
         response = msg_received
         request_number = msg_received['request']
+        ip = msg_received['ip']
+        port = msg_received['port']
         print("Received request#: {} from: {} @ address: {}".format(request_number, name, ip))
+        if check_name(name, self.state):  # todo check_name should verify ip address as well as port#??
 
-        if check_name(name, self.state):
-            self.state['names'].append((name, ip))
+            client = {'name': name,
+                      'ip': ip,
+                      'port': port}
+            with self.state_lock:
+                self.state['clients'].append(client)
+                update_txt_file(self.state, self.txt_file)
+            # todo just for testing. HOW TO RECOVER STATE
+            # self.state = {}
+            # self.state = recover_state(self.txt_file)
             print("{} registration acknowledged".format(name))
             response['type'] = UDPServer.REGISTERED
+
         else:
             print("{} registration not acknowledged. Duplicate names".format(name))
             response = {'request': request_number, 'type': UDPServer.UNREGISTERED, 'reason': 'Duplicate names'}

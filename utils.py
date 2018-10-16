@@ -1,16 +1,26 @@
 import json
+import ast
 from pathlib import Path
-
 
 
 # todo STATE MUST BE PROTECTED BY A LOCK WHEN THREADING
 
 
-def update_txt_file():
-    pass
-    #     pass  # todo rea
-    # else:
-    #     pass  # todo create file and write state to it
+def update_txt_file(state, file_name):
+    #print("\nupdate_txt_file() running\n")
+    file_name = file_name
+    state_ = str(state)
+    with open(file_name, 'w') as txt_file:
+        txt_file.write(state_)
+
+
+def recover_state(file_name):
+    with open(file_name, 'r') as my_file:
+        data = my_file.read()
+        state = ast.literal_eval(data)
+        print("State's type: {}".format(type(state)))
+        print(state)
+        return state
 
 
 def dict_to_bytes(dict_):
@@ -19,47 +29,23 @@ def dict_to_bytes(dict_):
     return bytes_
 
 
+def bytes_to_dict(bytes):
+    pass
+    # #dict_ = bytes.decode('utf-8')
+    # #return dict_.ast.literal_eval(dict_)
+    # return ast.literal_eval(bytes)
+
+
 def check_name(name, state):
     """this functions takes the name for a registration and checks to see
         that name is available for registration if so return True else
         return False"""
-    for n in state['names']:
-        if n[0] == name:
+    for client in state['clients']:
+        if client['name'] == name:
             return False
     return True
 
 
-# def ack_register_attempt(msg_received, socket_, return_address, state):
-#     """this function should return a msg to the sender that the registration is successful or not
-#         and if so update internal state to reflect that as well as update the .txt file"""
-#     # todo make sure the name isn't already registered
-#     # todo some type checking for port numbers and ip addresses would be good
-#     # todo check that someone isn't already registered w/ that name
-#     name = msg_received['name']
-#     ip = msg_received['ip']
-#     response = msg_received
-#     request_number = msg_received['request']
-#     print("Received request#: {} from: {} @ address: {}".format(name, ip, request_number))
-#
-#     if check_name(name, state):
-#         state['names'].append((name, ip))
-#         print("{} registration acknowledged".format(name))
-#         response['type'] = REGISTERED
-#     else:
-#         print("{} registration not acknowledged. Duplicate names".format(name))
-#         response = {'request': request_number, 'type': UNREGISTERED, 'reason': 'Duplicate name'}
-#     response = dict_to_bytes(response)
-#     socket_.sendto(response, return_address)
-
-
-# def handle_response(msg_received, socket_, return_address, state):
-#     """This functions accepts the incoming dict and checks the type so it
-#         can call the corresponding ack function. If this function can't identify
-#         the proper type it will return a string of the error msg"""
-#     if msg_received['type'] == REGISTER:
-#         ack_register_attempt(msg_received, socket_, return_address, state)
-#     else:
-#         print("type != Register threfore do nothing")  # todo change this
 
 
 

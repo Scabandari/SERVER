@@ -1,0 +1,1 @@
+{'clients': [{'port': 5000, 'name': 'ryan', 'ip': '192.168.0.107'}], 'items closed': [], 'items open': [{'minimum bid': 10, 'highest bid': (10, None), 'starting time': 1539731091.7960649, 'open status': True, 'seller': 'ryan', 'description': 'bat'}]}
