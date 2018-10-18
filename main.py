@@ -4,6 +4,7 @@ from tcp_server import TCPServer
 
 # todo TCP working both on same machine, test w/ client on other laptop
 TEXT_FILE = 'state.txt'
+AUCTION_TIME = 300  # number of seconds items should be up for bid
 state = {'clients': [],  # list of dicts: name, ip, port
          'items open': [],  # list of dicts: description, min bid, seller, highest bid, open status
          'items closed': []}  # list of dicts: description, min bid, seller, highest bid, open status
