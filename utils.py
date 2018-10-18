@@ -3,9 +3,6 @@ import ast
 from pathlib import Path
 
 
-# todo STATE MUST BE PROTECTED BY A LOCK WHEN THREADING
-
-
 def update_txt_file(state, file_name):
     #print("\nupdate_txt_file() running\n")
     file_name = file_name
@@ -31,9 +28,6 @@ def dict_to_bytes(dict_):
 
 def bytes_to_dict(bytes):
     pass
-    # #dict_ = bytes.decode('utf-8')
-    # #return dict_.ast.literal_eval(dict_)
-    # return ast.literal_eval(bytes)
 
 
 def check_name(name, state):

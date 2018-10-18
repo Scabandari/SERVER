@@ -12,7 +12,7 @@ udp_port = 5024
 state_lock = threading.Lock()
 
 # todo we need a seperate thread to go through all the items in state['items open']
-# todo and check if their time is up, if so change item['open status'] to False and
+# todo and check if their time is up (start time + 300=5min), if so change item['open status'] to False and
 # todo to items closed list, remove from items opened
 
 udp_server = UDPServer(

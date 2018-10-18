@@ -2,6 +2,9 @@ import threading
 import socket
 from client_connection import ClientConnection
 
+"""The TCP server will start a new thread for each item on offer and recieve msg's from clients
+    who are bidding on the items at the port number specified by the client in the OFFER msg"""
+
 
 class TCPServer(threading.Thread):
     # state will be a dict in main.py must be backed up in .txt file
@@ -14,7 +17,6 @@ class TCPServer(threading.Thread):
         self.connection_list = []
         self.messages = []  # list of msg's or dicts sent from clients over tcp
         self.continue_thread = True  # set to False if we want to terminate thread
-#        self.add_connections_thread = threading.Thread(target=self.add_connections)
         self.tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.tcp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.tcp_socket.bind((host, port))
@@ -27,23 +29,7 @@ class TCPServer(threading.Thread):
             # (conn, (ip, port)) = self.tcp_socket.accept()
             (conn, addr) = self.tcp_socket.accept()
             print("TCP connection from ip: {} port: {}".format(str(addr[0]), str(addr[1])))
-
-            # tcp_connection = threading.Thread(target=self.connection_thread, args=(conn, addr))
-            # tcp_connection.start()
-            # self.connection_list.append(tcp_connection)
-
             newthread = ClientConnection(addr[0], addr[1], conn, self.state, self.state_lock, self.txt_file)
             newthread.start()
             self.connection_list.append(newthread)
 
-    # @staticmethod
-    # def connection_thread(connection, address):
-    #     """Every client is connected through a connection_thread"""
-    #     while True:
-    #         # data = connection.recv(1024).decode('ascii')
-    #         data = connection.recv(1024).decode('utf-8')
-    #         if not data:
-    #             print("Data is not correct")
-    #             break
-    #         print("Connection from user: " + data)
-    #         connection.send("Successful response over tcp".encode('ascii'))
