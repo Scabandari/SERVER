@@ -1,5 +1,27 @@
 import json
 import ast
+import ipaddress
+
+
+def client_connected(ip_port, connection_list):
+    """
+    :param ip_port: a tuple (ip, port)
+    :param connection_list: list of connections ie [(ip, port), (ip, port)]
+    :return: True if there is already a connection w/ the given ip and port
+    """
+    for connection in connection_list:
+        if ip_port[0] == connection[0] and ip_port[1] == connection[1]:
+            return True
+    return False
+
+
+def is_ip(ip):
+    try:
+        ipaddress.ip_address(ip)
+        return_val = True
+    except ValueError:
+        return_val = False
+    return return_val
 
 
 def update_txt_file(state, file_name):
@@ -14,8 +36,8 @@ def recover_state(file_name):
     with open(file_name, 'r') as my_file:
         data = my_file.read()
         state = ast.literal_eval(data)
-        print("State's type: {}".format(type(state)))
-        print(state)
+        #print("State's type: {}".format(type(state)))
+        #print(state)
         return state
 
 
@@ -75,6 +97,17 @@ def has_open_items(name, state):
         if item['seller'] == name:
             return True
     return False
+
+
+def under_three_opens(name, state):
+    """If adding another item for bid would give the client with this name more
+        than 3 items up for bid return true, else false"""
+    counter = 0
+    for item in state['items open']:
+        if item['seller'] == name:
+            counter += 1
+    return counter < 3
+
 
 
 

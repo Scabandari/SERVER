@@ -22,9 +22,16 @@ class ClientConnection(threading.Thread):
             # data = connection.recv(1024).decode('ascii')
             data = self.connection.recv(1024).decode('utf-8')
             if not data:
-                print("Data is not correct")
+                #print("Data is not correct")
                 break
             data = ast.literal_eval(data)
             print("Message received from client over tcp: {}".format(data))
+
+    def send_msg(self, msg):
+        """msg: a dict to be sent to the client"""
+        msg = str(msg)
+        self.connection.send(msg.encode('utf-8'))
+
+
 
 

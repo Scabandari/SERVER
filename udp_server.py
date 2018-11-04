@@ -2,15 +2,17 @@ import threading
 import socket
 import ast
 import time
+from tcp_server import TCPServer
 from utils import (dict_to_bytes,
                    name_registered,
                    update_txt_file,
                    recover_state,
                     top_bidder,
                    name_matches_ip,
-                   has_open_items)
-
-# TODO right now tcp is handling OFFER but it's supposed to be done over UDP
+                   has_open_items,
+                   under_three_opens,
+                    client_connected,
+                   is_ip)
 
 
 class UDPServer(threading.Thread):
@@ -22,14 +24,19 @@ class UDPServer(threading.Thread):
     DEREG_DENIED = 'DEREG-DENIED'
     UNKNOWN = 'UNKNOWN'
     OFFER = 'OFFER'
+    NEW_ITEM = 'NEW-ITEM'
 
     # state will be a dict in main.py must be backed up in .txt file
     def __init__(self, host, port, state, state_lock, txt_file):
         self.next_item = 1
         self.host = host
         self.port = port
+        self.item_port = 5050  # the next port to assign for an item on offer, clients connect here to a TCPServer
+                               # bound to this port
         self.state = state
         self.txt_file = txt_file
+        self.connected_clients = []  # [(ip, port), (ip, port)...]
+        self.item_servers = []
         self.state_lock = state_lock  # locks access to state, update .txt file while lock held
         self.continue_thread = True
         self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -39,23 +46,26 @@ class UDPServer(threading.Thread):
     def run(self):
         print("UDP connection started on server side.")
         while self.continue_thread:
-            # todo we should have a pool of threads here for client connections?
             data, return_address = self.udp_socket.recvfrom(1024)
+            if not client_connected(return_address, self.connected_clients):
+                self.connected_clients.append(return_address)
             data = data.decode('ascii')  # data.decode('utf-8')
             msg_received = ast.literal_eval(data)  # unpacked as a dict object
             return_msg = self.handle_response(msg_received)
             return_msg = dict_to_bytes(return_msg)
             self.udp_socket.sendto(return_msg, return_address)
-            # todo this is where i should return the msg either success or failure
-            #request_number = msg_received['request']
-            # if error_msg:
-            #     self.send_back_error(error_msg, type, request_number, addr)
         self.udp_socket.close()
         print("UDPServer run function complete. UDP socket connection closed")
 
     def ack_de_register(self, msg_received):
-        # todo if they are registered and not the top bid for an item or offered an item currently being bid on
-        # then success else failure
+        """
+        If the client from which msg_received is sent is registered, has no items open for bids,
+        name and ip must match what is stored in their registration in state, they're not the top bidder
+        on any open items then deregister them and return a success msg. Otherwise return a msg indicating why
+        they cannot de-register
+        :param msg_received: msg received from client
+        :return: msg response for client
+        """
         can_de_reg = True
         name = msg_received['name']
         ip = msg_received['ip']
@@ -63,6 +73,9 @@ class UDPServer(threading.Thread):
         if not name_registered(name, self.state):
             can_de_reg = False
             reason = "That name not registered"
+        elif not is_ip(ip):
+            can_de_reg = False
+            reason = "That ip is not a valid ip address: {}".format(ip)
         elif not name_matches_ip(name, ip, self.state):
             can_de_reg = False
             reason = "That ip does not match the ip associated with client: {}".format(name)
@@ -96,7 +109,22 @@ class UDPServer(threading.Thread):
         ip = msg_received['ip']
         port = msg_received['port']
         print("Received request#: {} from: {} @ address: {}".format(request_number, name, ip))
-        if not name_registered(name, self.state):  # todo name_registered should verify ip address as well as port#??
+
+        if name_registered(name, self.state):  # todo name_registered should verify ip address as well as port#??
+            print("{} registration not acknowledged. Duplicate names".format(name))
+            response = {
+                'request': request_number,
+                'type': UDPServer.UNREGISTERED,
+                'reason': 'Duplicate names'
+            }
+        elif not is_ip(ip):
+            print("{} registration not acknowledged. Invalid ip address: {}".format(name, ip))
+            response = {
+                'request': request_number,
+                'type': UDPServer.UNREGISTERED,
+                'reason': 'Invalid ip address'
+            }
+        else:  # we can de-register client
             client = {'name': name,
                       'ip': ip,
                       'port': port}
@@ -108,41 +136,69 @@ class UDPServer(threading.Thread):
             # self.state = recover_state(self.txt_file)
             print("{} registration acknowledged".format(name))
             response['type'] = UDPServer.REGISTERED
-
-        else:
-            print("{} registration not acknowledged. Duplicate names".format(name))
-            response = {'request': request_number, 'type': UDPServer.UNREGISTERED, 'reason': 'Duplicate names'}
         return response
 
     def ack_offer(self, msg_received):
         """This functions receives the msg where a client has attempted to make and OFFER for
             an item for bid. It needs to determine if the offer is valid, possibly update
             state/txt_file and returns a response, either success or failure"""
-        if name_registered(msg_received['name'], self.state):  # todo check also if client has 3 items already up for bid
-            # todo handle_offer_success()
-            # todo just for testing
-            print("Bid starting at time.time(): {}".format(time.time()))
-            # todo broadcast new state to all registered clients on success in addition to current response?
-            self.offer_success(msg_received)
-            response = self.respond_offer(msg_received, True)
+        # todo test all possible paths
+        name = msg_received['name']
+        if not name_registered(name, self.state):
+            # todo this should check all conditions that lead to failure and last option should be success
+            reason = "Name: {} is not registered".format(name)
+            response = self.respond_offer(msg_received, False, reason)
+        elif not under_three_opens(name, self.state):
+            reason = "Cannot have more than 3 items up for bid"
+            response = self.respond_offer(msg_received, False, reason)
         else:
-            response = self.respond_offer(msg_received, False)
+            print("Bid starting at time.time(): {}".format(time.time()))
+            # todo broadcast new item msg to all registered clients on success
+            item = self.offer_success(msg_received)
+            response = self.respond_offer(msg_received, True)
+            all_clients_msg = {
+                'type': UDPServer.NEW_ITEM,
+                'description': response['description'],
+                'minimum bid': response['minimum bid'],
+                'item #': response['item #'],
+                'port #': item['port #']
+            }
+            self.send_all_clients(all_clients_msg)
+            # WE CREATE A TCP SERVER FOR EVERY ITEM ON OFFER!!
+            server_for_item = TCPServer(self.host, item['port #'], self.state, self.state_lock, self.txt_file)
+            self.item_servers.append(server_for_item)
         return response
+
+    def send_all_clients(self, msg):
+        """
+        This functions sends msg to all clients in self.connected_clients
+        :param msg:
+        :return: None
+        """
+        # todo We're sending the NEW-ITEM msg to all clients but we're only supposed to send it
+        # todo registered clients?
+        for client_address in self.connected_clients:
+            send_msg = dict_to_bytes(msg)
+            self.udp_socket.sendto(send_msg, client_address)
 
     def offer_success(self, msg):
         """Updates state and the text file and returns a msg to be sent back to
             client"""
+        # todo get a random port and assign it below but first make sure not being used by other items in open list
         item = {
             'description': msg['description'],
             'minimum bid': msg['minimum bid'],
             'seller': msg['name'],
             'highest bid': (msg['minimum bid'], None),
             'open status': True,
-            'starting time': time.time()
+            'starting time': time.time(),
+            'port #': self.item_port
         }
+        self.item_port += 1
         with self.state_lock:
             self.state['items open'].append(item)
             update_txt_file(self.state, self.txt_file)
+        return item
 
     def de_reg_success(self, name):
         """This function should remove the client from the clients list which de-registers them.
@@ -159,7 +215,7 @@ class UDPServer(threading.Thread):
             update_txt_file(self.state, self.txt_file)
             print("killing time")
 
-    def respond_offer(self, msg, success):
+    def respond_offer(self, msg, success, reason=None):
         """This function is called to respond to the clients OFFER type msg"""
         if success is True:
             msg = {
@@ -174,12 +230,9 @@ class UDPServer(threading.Thread):
             msg = {
                 'type': 'OFFER-DENIED',
                 'request': msg['request'],
-                'reason': 'client not registered'
+                'reason': reason
             }
-        #response_val = str(msg).encode('utf-8')
-        #print("response_val type: {}".format(type(response_val)))
-        return msg  # todo make sure this is getting sent
-        #self.connection.send(response_val)   tcp stuff
+        return msg
 
     def handle_response(self, msg_received):
         """This function accepts the incoming dict and checks the type so it
@@ -191,29 +244,14 @@ class UDPServer(threading.Thread):
         if type_ == UDPServer.REGISTER:
             response = self.ack_register(msg_received)
         elif type_ == UDPServer.DE_REGISTER:
-            # todo make sure we're checking if the name and ip address are correct before de-reg
             response = self.ack_de_register(msg_received)
         elif type_ == UDPServer.OFFER:
             response = self.ack_offer(msg_received)
         else:
-            # todo think about what we should do here if we can't identify the correct type
-            # todo of the msg being sent to use over UDP
-            # todo test this by senting an UDP message of unknown type
-            print("type != Register threfore do nothing")  # todo change this
+            print("ERROR: UDP msg received with unknown type")  # todo change this
             error_msg = "Cannot handle msg of type: {}".format(msg_received['type'])
             response = {'ERROR': 'Unknown type'}  # todo fix this, need a better response
             print(error_msg)
         return response
 
-    # def send_back_error(self, error_msg, type_, request_number, return_address):
-    #     """This function should send back an error regardless of type so
-    #         will be expanded to become and if elsif elsif ...."""
-    #     if type_ == UDPServer.REGISTER:
-    #         response_type = UDPServer.UNREGISTERED
-    #     else:
-    #         response_type = UDPServer.UNKNOWN
-    #         error_msg = "Unable to determine msg type"
-    #     response = {'type': response_type, 'request': request_number, 'reason': error_msg}
-    #     response = dict_to_bytes(response)
-    #     self.udp_socket.sendto(response, return_address)
 
