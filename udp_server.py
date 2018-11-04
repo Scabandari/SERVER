@@ -11,7 +11,7 @@ from utils import (dict_to_bytes,
                    name_matches_ip,
                    has_open_items,
                    under_three_opens,
-                    client_connected,
+                   client_connected,
                    is_ip)
 
 
@@ -166,6 +166,7 @@ class UDPServer(threading.Thread):
             self.send_all_clients(all_clients_msg)
             # WE CREATE A TCP SERVER FOR EVERY ITEM ON OFFER!!
             server_for_item = TCPServer(self.host, item['port #'], self.state, self.state_lock, self.txt_file)
+            server_for_item.start()
             self.item_servers.append(server_for_item)
         return response
 
