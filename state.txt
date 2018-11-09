@@ -1,1 +1,0 @@
-{'items open': [{'open status': True, 'starting time': 1541543731.6315522, 'highest bid': (10, None), 'minimum bid': 10, 'seller': 'ryan', 'port #': 5050, 'description': 'bat'}], 'clients': [{'name': 'ryan', 'port': 5010, 'ip': '192.168.0.107'}], 'items closed': []}
