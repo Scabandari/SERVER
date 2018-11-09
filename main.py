@@ -8,8 +8,10 @@ state = {'clients': [],  # list of dicts: name, ip, port
          'items closed': []}  # list of dicts: description, min bid, seller, highest bid, open status
 
 AUCTION_TIME = 300  # number of seconds items should be up for bid
-host = "192.168.0.107"
+ipadd = input("Please Enter host IP address: ")
+host = ipadd
 udp_port = 5024
+tcp_port = 5002
 state_lock = threading.Lock()
 #send_all_clients = []  # msg queue for msg's that need to be sent to all clients
 #all_clients_lock = threading.Lock()
@@ -26,14 +28,13 @@ udp_server = UDPServer(
     txt_file=TEXT_FILE
 )
 
-# tcp_port = 5002
-# tcp_server = TCPServer(
-#     host=host,
-#     port=tcp_port,
-#     state=state,
-#     state_lock=state_lock,
-#     txt_file=TEXT_FILE
-# )
+tcp_server = TCPServer(
+    host=host,
+    port=tcp_port,
+    state=state,
+    state_lock=state_lock,
+    txt_file=TEXT_FILE
+)
 
 udp_server.start()
 #tcp_server.start()

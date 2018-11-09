@@ -28,7 +28,7 @@ class TCPServer(threading.Thread):
         threading.Thread.__init__(self)
 
     def run(self):
-        print("TCP connection started on server side.")
+        print("TCP connection started on server side")
         send_all_clients = threading.Thread(target=self.check_all_clients)
         send_all_clients.start()
         while self.continue_thread:
@@ -62,6 +62,15 @@ class TCPServer(threading.Thread):
                     client.send_msg(all_clients_msg)
             sleep(0.2)  # sleep 200 millis and make sure others can easily acquire all_clients_lock
 
+    def bid_over(self):
+        print("Bid Over")
+    
 
+    def sold_to(self):
+        print("Sold to")
+
+    
+    def not_sold(self):
+        print("Not Sold")
 
 
