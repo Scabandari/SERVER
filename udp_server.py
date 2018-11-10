@@ -25,6 +25,7 @@ class UDPServer(threading.Thread):
     UNKNOWN = 'UNKNOWN'
     OFFER = 'OFFER'
     NEW_ITEM = 'NEW-ITEM'
+    UPDATE_CLIENTS = 'UPDATE-CLIENTS'
 
     # state will be a dict in main.py must be backed up in .txt file
     def __init__(self, host, port, state, state_lock, txt_file):
@@ -36,7 +37,7 @@ class UDPServer(threading.Thread):
         self.state = state
         self.txt_file = txt_file
         self.connected_clients = []  # [(ip, port), (ip, port)...]
-        self.item_servers = []
+        self.item_servers = []  # TCPServers created started in own thread and added here
         self.state_lock = state_lock  # locks access to state, update .txt file while lock held
         self.continue_thread = True
         self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -164,6 +165,7 @@ class UDPServer(threading.Thread):
                 'port #': item['port #']
             }
             self.send_all_clients(all_clients_msg)
+            self.update_clients()
             # WE CREATE A TCP SERVER FOR EVERY ITEM ON OFFER!!
             server_for_item = TCPServer(self.host, item['port #'], self.state, self.state_lock, self.txt_file)
             server_for_item.start()
@@ -185,19 +187,18 @@ class UDPServer(threading.Thread):
     def offer_success(self, msg):
         """Updates state and the text file and returns a msg to be sent back to
             client"""
-        # todo get a random port and assign it below but first make sure not being used by other items in open list
         item = {
             'description': msg['description'],
             'minimum bid': msg['minimum bid'],
             'seller': msg['name'],
-            'highest bid': (msg['minimum bid'], None),
-            'open status': True,
-            'starting time': time.time(),
+            'highest bid': (msg['minimum bid'], "No bids yet"),  # todo item['highest bid'][1] should be name of highest bidder192.168.0.107
+            'open status': 1,  # todo 1 was True but when changing from dict to bytes True becomes true and causes a problem
+            'starting time': int(time.time()),
             'port #': self.item_port
         }
         self.item_port += 1
         with self.state_lock:
-            self.state['items open'].append(item)
+            self.state['items'].append(item)
             update_txt_file(self.state, self.txt_file)
         return item
 
@@ -255,4 +256,20 @@ class UDPServer(threading.Thread):
             print(error_msg)
         return response
 
+    def update_clients(self):
+        """
+        This functions sends all clients the new state of items for bid. This needs to be called every time
+        an offer is made, a highest bid is made, an items time has expired and either a winner is announced or
+        no offer has been made
+        :return: None
+        """
+        # todo make sure this function is being called in all those circumstances and check if there are any I've missed
+        # read the project description
+        with self.state_lock:
+            items = self.state['items']
+        clients_msg = {
+            'type': UDPServer.UPDATE_CLIENTS,
+            'items': items
+        }
+        self.send_all_clients(clients_msg)
 
