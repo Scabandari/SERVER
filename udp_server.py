@@ -12,7 +12,8 @@ from utils import (dict_to_bytes,
                    has_open_items,
                    under_three_opens,
                    client_connected,
-                   is_ip)
+                   is_ip,
+                   getItemDescriptions)
 
 
 class UDPServer(threading.Thread):
@@ -25,6 +26,7 @@ class UDPServer(threading.Thread):
     UNKNOWN = 'UNKNOWN'
     OFFER = 'OFFER'
     NEW_ITEM = 'NEW-ITEM'
+    SHOW_ITEMS = 'SHOW_ITEMS'
 
     # state will be a dict in main.py must be backed up in .txt file
     def __init__(self, host, port, state, state_lock, txt_file):
@@ -169,6 +171,11 @@ class UDPServer(threading.Thread):
             server_for_item.start()
             self.item_servers.append(server_for_item)
         return response
+        
+    def ack_show_all_messages(self, msg_received):
+        response = getItemDescriptions(self.state)
+        #print(response[0])
+        return response
 
     def send_all_clients(self, msg):
         """
@@ -235,6 +242,7 @@ class UDPServer(threading.Thread):
             }
         return msg
 
+
     def handle_response(self, msg_received):
         """This function accepts the incoming dict and checks the type so it
             can call the corresponding ack function. It should return both a success msg
@@ -248,6 +256,8 @@ class UDPServer(threading.Thread):
             response = self.ack_de_register(msg_received)
         elif type_ == UDPServer.OFFER:
             response = self.ack_offer(msg_received)
+        elif type_ == UDPServer.SHOW_ITEMS:
+            response = self.ack_show_all_messages(msg_received)
         else:
             print("ERROR: UDP msg received with unknown type")  # todo change this
             error_msg = "Cannot handle msg of type: {}".format(msg_received['type'])
