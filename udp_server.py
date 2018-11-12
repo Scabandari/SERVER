@@ -25,6 +25,7 @@ class UDPServer(threading.Thread):
     UNKNOWN = 'UNKNOWN'
     OFFER = 'OFFER'
     NEW_ITEM = 'NEW-ITEM'
+    GETPORT = 'GETPORT'
 
     # state will be a dict in main.py must be backed up in .txt file
     def __init__(self, host, port, state, state_lock, txt_file):
@@ -235,6 +236,16 @@ class UDPServer(threading.Thread):
             }
         return msg
 
+
+    def get_item_port(self, msg):
+        items = self.state['items open']
+        port = items[0]['port #']
+        msg = {
+            'type': 'ITEMPORT',
+            'port': port
+        }
+        return msg
+
     def handle_response(self, msg_received):
         """This function accepts the incoming dict and checks the type so it
             can call the corresponding ack function. It should return both a success msg
@@ -248,6 +259,8 @@ class UDPServer(threading.Thread):
             response = self.ack_de_register(msg_received)
         elif type_ == UDPServer.OFFER:
             response = self.ack_offer(msg_received)
+        elif type_ == UDPServer.GETPORT:
+            response = self.get_item_port(msg_received)
         else:
             print("ERROR: UDP msg received with unknown type")  # todo change this
             error_msg = "Cannot handle msg of type: {}".format(msg_received['type'])

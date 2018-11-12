@@ -62,6 +62,31 @@ class TCPServer(threading.Thread):
                     client.send_msg(all_clients_msg)
             sleep(0.2)  # sleep 200 millis and make sure others can easily acquire all_clients_lock
 
+    
+    
+    def bidding(self, bid_msg):
+        
+
+
+        print("Bid")
+    
+    
+
+
+
+    def highest_bid(self):
+        print("highest Bid")
+
+
+
+
+
+    def winning_bid(self):
+        print("winning bid")
+
+
+
+
     def bid_over(self):
         print("Bid Over")
     
