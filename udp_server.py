@@ -56,7 +56,6 @@ class UDPServer(threading.Thread):
             msg_received = ast.literal_eval(data)  # unpacked as a dict object
             return_msg = self.handle_response(msg_received)
             return_msg = dict_to_bytes(return_msg)
-            #print(return_msg)
             self.udp_socket.sendto(return_msg, return_address)
         self.udp_socket.close()
         print("UDPServer run function complete. UDP socket connection closed")
@@ -175,10 +174,18 @@ class UDPServer(threading.Thread):
         return response
         
     def ack_show_all_messages(self, msg_received):
-        response = getItemDescriptions(self.state)
+        listofItems = getItemDescriptions(self.state)
+        response = self.generateListOfAllOpenItems(listofItems)
        # print(response)
         return response
 
+    #Appends the type classifier to the list of items. Needed to satisfy the if condition in udpincoming in main.py
+    def generateListOfAllOpenItems(self,listOfItems):
+        msg = {'type': UDPServer.SHOW_ITEMS}
+        msg.update(listOfItems)
+        #print(msg) #msg looks like this: {'type': 'SHOW_ITEMS', 'description': 'bat', 'minimum bid': 10, 'seller': 'ryan', 'highest bid': (10, None), 'open status': True, 'starting time': 1542127611.236969, 'port #': 5050}
+        return msg
+        
     def send_all_clients(self, msg):
         """
         This functions sends msg to all clients in self.connected_clients
