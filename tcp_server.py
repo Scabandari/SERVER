@@ -64,10 +64,8 @@ class TCPServer(threading.Thread):
 
     
     
-    def bidding(self, bid_msg):
+    def bidding(self, msg):
         
-
-
         print("Bid")
     
     
