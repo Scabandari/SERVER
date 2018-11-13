@@ -27,6 +27,7 @@ class UDPServer(threading.Thread):
     OFFER = 'OFFER'
     NEW_ITEM = 'NEW-ITEM'
     SHOW_ITEMS = 'SHOW_ITEMS'
+    GETPORT = 'GETPORT'
 
     # state will be a dict in main.py must be backed up in .txt file
     def __init__(self, host, port, state, state_lock, txt_file):
@@ -55,6 +56,7 @@ class UDPServer(threading.Thread):
             msg_received = ast.literal_eval(data)  # unpacked as a dict object
             return_msg = self.handle_response(msg_received)
             return_msg = dict_to_bytes(return_msg)
+            #print(return_msg)
             self.udp_socket.sendto(return_msg, return_address)
         self.udp_socket.close()
         print("UDPServer run function complete. UDP socket connection closed")
@@ -174,7 +176,7 @@ class UDPServer(threading.Thread):
         
     def ack_show_all_messages(self, msg_received):
         response = getItemDescriptions(self.state)
-        #print(response[0])
+       # print(response)
         return response
 
     def send_all_clients(self, msg):
@@ -243,6 +245,15 @@ class UDPServer(threading.Thread):
         return msg
 
 
+    def get_item_port(self, msg):
+        items = self.state['items open']
+        port = items[0]['port #']
+        msg = {
+            'type': 'ITEMPORT',
+            'port': port
+        }
+        return msg
+
     def handle_response(self, msg_received):
         """This function accepts the incoming dict and checks the type so it
             can call the corresponding ack function. It should return both a success msg
@@ -258,6 +269,8 @@ class UDPServer(threading.Thread):
             response = self.ack_offer(msg_received)
         elif type_ == UDPServer.SHOW_ITEMS:
             response = self.ack_show_all_messages(msg_received)
+        elif type_ == UDPServer.GETPORT:
+            response = self.get_item_port(msg_received)
         else:
             print("ERROR: UDP msg received with unknown type")  # todo change this
             error_msg = "Cannot handle msg of type: {}".format(msg_received['type'])

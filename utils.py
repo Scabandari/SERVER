@@ -111,8 +111,8 @@ def under_three_opens(name, state):
 def getItemDescriptions(state):
     listOfItems = {}
     for items in state["items open"]:
-        listOfItems.update(items['description'])
-    print(listOfItems)
+        listOfItems.update(items)
+    #print(listOfItems)
     return listOfItems
 
 

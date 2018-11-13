@@ -24,7 +24,7 @@ class ClientConnection(threading.Thread):
             if not data:
                 #print("Data is not correct")
                 break
-            data = ast.literal_eval(data)
+            #data = ast.literal_eval(data)
             print("Message received from client over tcp: {}".format(data))
 
     def send_msg(self, msg):
