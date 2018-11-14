@@ -56,6 +56,9 @@ class UDPServer(threading.Thread):
             msg_received = ast.literal_eval(data)  # unpacked as a dict object
             return_msg = self.handle_response(msg_received)
             return_msg = dict_to_bytes(return_msg)
+            print("###")
+            print(return_msg)
+            print("###")
             self.udp_socket.sendto(return_msg, return_address)
         self.udp_socket.close()
         print("UDPServer run function complete. UDP socket connection closed")
@@ -181,10 +184,10 @@ class UDPServer(threading.Thread):
 
     #Appends the type classifier to the list of items. Needed to satisfy the if condition in udpincoming in main.py
     def generateListOfAllOpenItems(self,listOfItems):
-        msg = {'type': UDPServer.SHOW_ITEMS}
-        msg.update(listOfItems)
+        return_msg = {'type': UDPServer.SHOW_ITEMS}
+        return_msg.update(listOfItems)
         #print(msg) #msg looks like this: {'type': 'SHOW_ITEMS', 'description': 'bat', 'minimum bid': 10, 'seller': 'ryan', 'highest bid': (10, None), 'open status': True, 'starting time': 1542127611.236969, 'port #': 5050}
-        return msg
+        return return_msg
         
     def send_all_clients(self, msg):
         """
@@ -251,7 +254,7 @@ class UDPServer(threading.Thread):
             }
         return msg
 
-
+    #needs to be modified to find all potential items
     def get_item_port(self, msg):
         items = self.state['items open']
         port = items[0]['port #']
