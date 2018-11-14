@@ -115,6 +115,11 @@ def getItemDescriptions(state):
     #print(listOfItems)
     return listOfItems
 
+def getItem(portNumber,state):
+    for items in state['items open']:
+        if (items['port #'] == portNumber):
+            itemForBid = items
+    return itemForBid
 
 
 

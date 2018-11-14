@@ -9,6 +9,7 @@ from client_connection import ClientConnection
 
 
 class TCPServer(threading.Thread):
+    
     # state will be a dict in main.py must be backed up in .txt file
     def __init__(self, host, port, state, state_lock, txt_file):
         self.host = host
@@ -64,10 +65,8 @@ class TCPServer(threading.Thread):
 
     
     
-    def bidding(self, bid_msg):
+    def bidding(self, msg):
         
-
-
         print("Bid")
     
     

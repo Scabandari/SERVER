@@ -10,11 +10,15 @@ from utils import (dict_to_bytes,
                    under_three_opens,
                    client_connected,
                    is_ip,
-                   getItemDescriptions)
+                   getItemDescriptions,
+                   getItem)
 # referenced here: https://www.techbeamers.com/python-tutorial-write-multithreaded-python-server/
 
 
 class ClientConnection(threading.Thread):
+    BID = 'BID' #when bid is good, meaning its the highest bid
+    BID_LOW = 'BID_LOW'
+
     def __init__(self, ip, port, connection, state, state_lock, txt_file):
         self.ip = ip
         self.port = port
@@ -44,8 +48,44 @@ class ClientConnection(threading.Thread):
     def handle_response(self, msg_received):
         #Message will always be a bid. What this function will do is check whether to send the Winner and
         #the highest bid messages, in addition to the general bid confirmed message
-        print('hello')
-        msg = 'hello'
+        print("msg_received: {}".format(str(msg_received)))  #FOR TESTING PURPOSES
+        type_ = msg_received['type']
+        #Only one type but this format makes it easy to scale if we want
+        #to add more functionality
+        if (type_ == ClientConnection.BID):
+            response = self.ack_bid(msg_received)
+        else:
+            print("ERROR: TCP msg received with unknown type")  # todo change this
+            error_msg = "Cannot handle msg of type: {}".format(msg_received['type'])
+            response = {'ERROR': 'Unknown type'}  # todo fix this, need a better response
+            print(error_msg)
+        return response
+
+    def ack_bid(self, msg_received):
+        amount = msg_received['amount']
+        itemForBid = getItem(self.port, self.state)
+        if (amount <= itemForBid['highest bid']):
+            response = self.respond_bid(msg_received, False)
+        else:
+            response = self.respond_bid(msg_received,True)
+        return response
+
+    def respond_bid(self, msg_received, success):
+        #Responds to the bid 
+        if success is True:
+            msg = {
+                'type:':'BID',
+                'request:':msg_received['request'],
+                'highest bid':msg_received['highest bid'],
+                'item #':msg_received['item #']
+            }
+        else:
+            msg = {
+                'type:':'BID_LOW',
+                'request:':msg_received['request'],
+                'minimum bid:':msg_received['minimum bid'],
+                'reason:': 'your bid is too low, MO MONEY!'
+            }
         return msg
 
     def send_msg(self, msg):
