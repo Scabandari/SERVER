@@ -4,9 +4,20 @@ from tcp_server import TCPServer
 
 TEXT_FILE = 'state.txt'
 state = {'clients': [],  # list of dicts: name, ip, port
-         'items open': [],  # list of dicts: description, min bid, seller, highest bid, open status
-         'items closed': []}  # list of dicts: description, min bid, seller, highest bid, open status
+         'items': []  # list of dicts: description, min bid, seller, highest bid, open status
+         }
 
+"""  for items above
+       item = {
+            'description': msg['description'],
+            'minimum bid': msg['minimum bid'],
+            'seller': msg['name'],
+            'highest bid': (msg['minimum bid'], None),
+            'open status': True,
+            'starting time': time.time(),
+            'port #': self.item_port
+        }
+"""
 AUCTION_TIME = 300  # number of seconds items should be up for bid
 ipadd = input("Please Enter host IP address: ")
 host = ipadd

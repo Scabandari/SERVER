@@ -1,1 +1,0 @@
-{'clients': [{'name': 'Adam', 'ip': '172.31.11.213', 'port': '5555'}, {'name': 'Ken', 'ip': '172.31.11.213', 'port': '5554'}, {'name': 'Ben', 'ip': '172.31.11.213', 'port': '5553'}], 'items open': [], 'items closed': []}
