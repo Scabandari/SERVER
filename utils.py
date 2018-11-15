@@ -122,12 +122,18 @@ def getItemDescriptions(state):
     return listOfItems
 
 def getItem(portNumber,state):
+    #port = int(portNumber)
+    itemForBid = {}
     for items in state['items open']:
-        if (items['port #'] == portNumber):
-            itemForBid = items
+        if items['port #'] == portNumber:
+            itemForBid.update(items)
     return itemForBid
 
-
+def getHighestBid(item):
+    maxbidplusclient = ()
+    maxbidplusclient  = item['highest bid']
+    returnValue = maxbidplusclient[0]
+    return returnValue
 
 
 

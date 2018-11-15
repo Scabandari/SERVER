@@ -11,7 +11,8 @@ from utils import (dict_to_bytes,
                    client_connected,
                    is_ip,
                    getItemDescriptions,
-                   getItem)
+                   getItem,
+                   getHighestBid)
 # referenced here: https://www.techbeamers.com/python-tutorial-write-multithreaded-python-server/
 
 
@@ -62,9 +63,11 @@ class ClientConnection(threading.Thread):
         return response
 
     def ack_bid(self, msg_received):
-        amount = msg_received['amount']
-        itemForBid = getItem(self.port, self.state)
-        if (amount <= itemForBid['highest bid']):
+        amount = int(msg_received['amount'])
+        itemForBid = getItem(5050, self.state)
+        currentMaxBid = getHighestBid(itemForBid)
+        #converting into int to use in comparator
+        if (amount <= currentMaxBid):
             response = self.respond_bid(msg_received, False)
         else:
             response = self.respond_bid(msg_received,True)
