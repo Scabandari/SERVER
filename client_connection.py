@@ -10,9 +10,9 @@ from utils import (dict_to_bytes,
                    under_three_opens,
                    client_connected,
                    is_ip,
-                   getItemDescriptions,
-                   getItem,
-                   getHighestBid)
+                   get_item_descriptions,
+                   get_item,
+                   get_highest_bid)
 # referenced here: https://www.techbeamers.com/python-tutorial-write-multithreaded-python-server/
 
 
@@ -20,13 +20,14 @@ class ClientConnection(threading.Thread):
     BID = 'BID' #when bid is good, meaning its the highest bid
     BID_LOW = 'BID_LOW'
 
-    def __init__(self, ip, port, connection, state, state_lock, txt_file):
+    def __init__(self, ip, port, connection, state, state_lock, txt_file, itemPort):
         self.ip = ip
         self.port = port
         self.connection = connection
         self.state = state
         self.txt_file = txt_file
         self.state_lock = state_lock
+        self.itemPort = itemPort
         #self.OFFER = 'OFFER'
         threading.Thread.__init__(self)
         print("Starting tcp socket connection with client at " + str(ip) + " port " + str(port))
@@ -38,23 +39,23 @@ class ClientConnection(threading.Thread):
             # data = connection.recv(1024).decode('ascii')
             data = self.connection.recv(1024).decode('utf-8')
             if not data:
-                #print("Data is not correct")
+                # print("Data is not correct")
                 break
             msg_received = ast.literal_eval(data)
             print("Message received from client over tcp: {}".format(data)) # For testing purposes
-            #return_msg = self.handle_response(msg_received)
-            #return_msg = dict_to_bytes(return_msg)
-            return_msg = "Nothing yet" #bidding process not complete yet, will crash if activated.
+            return_msg = self.handle_response(msg_received)
+            return_msg = dict_to_bytes(return_msg)
+            # return_msg = "Nothing yet" #bidding process not complete yet, will crash if activated.
             self.send_msg(return_msg)
 
     def handle_response(self, msg_received):
-        #Message will always be a bid. What this function will do is check whether to send the Winner and
-        #the highest bid messages, in addition to the general bid confirmed message
-        print("msg_received: {}".format(str(msg_received)))  #FOR TESTING PURPOSES
+        # Message will always be a bid. What this function will do is check whether to send the Winner and
+        # the highest bid messages, in addition to the general bid confirmed message
+        print("msg_received: {}".format(str(msg_received)))  # FOR TESTING PURPOSES
         type_ = msg_received['type']
-        #Only one type but this format makes it easy to scale if we want
-        #to add more functionality
-        if (type_ == ClientConnection.BID):
+        # Only one type but this format makes it easy to scale if we want
+        # to add more functionality
+        if type_ == ClientConnection.BID:
             response = self.ack_bid(msg_received)
         else:
             print("ERROR: TCP msg received with unknown type")  # todo change this
@@ -65,17 +66,21 @@ class ClientConnection(threading.Thread):
 
     def ack_bid(self, msg_received):
         amount = int(msg_received['amount'])
-        itemForBid = getItem(self.port, self.state)
-        currentMaxBid = getHighestBid(itemForBid)
-        #converting into int to use in comparator
-        if (amount <= currentMaxBid):
+        item_for_bid = get_item(self.itemPort, self.state)
+        curr_max_bid = get_highest_bid(item_for_bid)
+        # converting into int to use in comparator
+        if amount <= curr_max_bid:
             response = self.respond_bid(msg_received, False)
-        else:
-            response = self.respond_bid(msg_received,True)
+        else:  # bid success, item details will now be modified to reflect new information
+            response = self.respond_bid(msg_received, True)
+            for item in self.state['items open']:
+                # function below just returns "ryan", it won't be implemented until we attach actual port number
+                # to the client
+                # name = get_bidder_name(portNumber, state)
+                item['highest bid'] = (amount, "ryan")
         return response
 
     def respond_bid(self, msg_received, success):
-        #Responds to the bid 
         if success is True:
             msg = {
                 'type:':'BID',
@@ -83,11 +88,14 @@ class ClientConnection(threading.Thread):
                 'highest bid':msg_received['highest bid'],
                 'item #':msg_received['item #']
             }
+
+            # does the following: writes to state file to update highest bid
+            # sends the highest bid message to all clients
         else:
             msg = {
-                'type:':'BID_LOW',
-                'request:':msg_received['request'],
-                'minimum bid:':msg_received['minimum bid'],
+                'type:': 'BID_LOW',
+                'request:': msg_received['request'],
+                'minimum bid:': msg_received['minimum bid'],
                 'reason:': 'your bid is too low, MO MONEY!'
             }
         return msg

@@ -108,32 +108,46 @@ def under_three_opens(name, state):
             counter += 1
     return counter < 3
 
-def getItemDescriptions(state):
-    listOfItems = {}
+def get_item_descriptions(state):
+    list_of_items = {}
     for items in state["items open"]:
+        # copying highest bid + highest bidder name below so that i change the highest bidder value to empty string
+        # if its value is None. This is to avoid conversion errors from using the ast library
+        high_bid_plus_bidder = items['highest bid']
+        if high_bid_plus_bidder[1] is None:
+            high_bid_plus_bidder[1] == 'no one'
         msg = {
-            'description:' : items['description'],
-            'minimum bid:' : items['minimum bid'],
-            'highest bid:' : items['highest bid'],
-            'port #' : items['port #']
+            'description:': items['description'],
+            'minimum bid:': items['minimum bid'],
+            'highest bid:': high_bid_plus_bidder,
+            'port #': items['port #']
         }
-        listOfItems.update(msg)
-    #print(listOfItems)
-    return listOfItems
+        list_of_items.update(msg)
+    return list_of_items
 
-def getItem(portNumber,state):
-    #port = int(portNumber)
-    itemForBid = {}
+
+def get_item(portNumber, state):
+    item_for_bid = {}
     for items in state['items open']:
         if items['port #'] == portNumber:
-            itemForBid.update(items)
-    return itemForBid
+            item_for_bid.update(items)
+    return item_for_bid
 
-def getHighestBid(item):
-    maxbidplusclient = ()
-    maxbidplusclient  = item['highest bid']
-    returnValue = maxbidplusclient[0]
-    return returnValue
+# Function below won't work yet because the port associated with the client connection is
+# not the port nb associated with the client in the state file
+
+def get_bidder_name(portNumber,state):
+    bidder_name = ""
+    for client in state['clients']:
+        if client['port'] == portNumber:
+            bidder_name = client['name']
+    return bidder_name
+
+
+def get_highest_bid(item):
+    max_bid_plus_client= item['highest bid']
+    return_value = max_bid_plus_client[0]
+    return return_value
 
 
 

@@ -13,7 +13,7 @@ from utils import (dict_to_bytes,
                    under_three_opens,
                    client_connected,
                    is_ip,
-                   getItemDescriptions)
+                   get_item_descriptions)
 
 
 class UDPServer(threading.Thread):
@@ -56,11 +56,11 @@ class UDPServer(threading.Thread):
             msg_received = ast.literal_eval(data)  # unpacked as a dict object
             return_msg = self.handle_response(msg_received)
             return_msg = dict_to_bytes(return_msg)
-            #used to test whether the return message is as expected
+            # used to test whether the return message is as expected
             print("###")
             print(return_msg)
             print("###")
-            #end of test print statements
+            # end of test print statements
             self.udp_socket.sendto(return_msg, return_address)
         self.udp_socket.close()
         print("UDPServer run function complete. UDP socket connection closed")
@@ -179,16 +179,14 @@ class UDPServer(threading.Thread):
         return response
         
     def ack_show_all_messages(self, msg_received):
-        listofItems = getItemDescriptions(self.state)
-        response = self.generateListOfAllOpenItems(listofItems)
-       # print(response)
+        list_of_items = get_item_descriptions(self.state)
+        response = self.gen_list_of_all_open_items(list_of_items)
         return response
 
-    #Appends the type classifier to the list of items. Needed to satisfy the if condition in udpincoming in main.py
-    def generateListOfAllOpenItems(self,listOfItems):
+    # Appends the type classifier to the list of items to obey messaging protocol
+    def gen_list_of_all_open_items(self, list_of_items):
         return_msg = {'type': UDPServer.SHOW_ITEMS}
-        return_msg.update(listOfItems)
-        #print(msg) #msg looks like this: {'type': 'SHOW_ITEMS', 'description': 'bat', 'minimum bid': 10, 'seller': 'ryan', 'highest bid': (10, None), 'open status': True, 'starting time': 1542127611.236969, 'port #': 5050}
+        return_msg.update(list_of_items)
         return return_msg
         
     def send_all_clients(self, msg):
@@ -256,7 +254,7 @@ class UDPServer(threading.Thread):
             }
         return msg
 
-    #needs to be modified to find all potential items
+    # needs to be modified to find all potential items
     def get_item_port(self, msg):
         items = self.state['items open']
         port = items[0]['port #']

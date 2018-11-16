@@ -8,7 +8,8 @@ state = {'clients': [],  # list of dicts: name, ip, port
          'items closed': []}  # list of dicts: description, min bid, seller, highest bid, open status
 
 AUCTION_TIME = 300  # number of seconds items should be up for bid
-ipadd = input("Please Enter host IP address: ")
+#ipadd = input("Please Enter host IP address: ")
+ipadd = "192.168.1.184"
 host = ipadd
 udp_port = 5024
 tcp_port = 5002

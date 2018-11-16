@@ -46,7 +46,7 @@ class TCPServer(threading.Thread):
             }
             connection_success = str(connection_success)
             conn.send(connection_success.encode('utf-8'))
-            newthread = ClientConnection(addr[0], addr[1], conn, self.state, self.state_lock, self.txt_file)
+            newthread = ClientConnection(addr[0], addr[1], conn, self.state, self.state_lock, self.txt_file, self.port)
             newthread.start()
             self.connection_list.append(newthread)
 
