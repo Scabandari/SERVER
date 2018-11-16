@@ -184,6 +184,7 @@ class UDPServer(threading.Thread):
         return response
 
     # Appends the type classifier to the list of items to obey messaging protocol
+
     def gen_list_of_all_open_items(self, list_of_items):
         return_msg = {'type': UDPServer.SHOW_ITEMS}
         return_msg.update(list_of_items)

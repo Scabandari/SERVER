@@ -108,14 +108,17 @@ def under_three_opens(name, state):
             counter += 1
     return counter < 3
 
+
 def get_item_descriptions(state):
     list_of_items = {}
     for items in state["items open"]:
         # copying highest bid + highest bidder name below so that i change the highest bidder value to empty string
         # if its value is None. This is to avoid conversion errors from using the ast library
         high_bid_plus_bidder = items['highest bid']
-        if high_bid_plus_bidder[1] is None:
-            high_bid_plus_bidder[1] == 'no one'
+        list_version = list(high_bid_plus_bidder)  # because tuples are immutable
+        if list_version[1] is None:
+            list_version[1] = 'no one'
+        high_bid_plus_bidder = tuple(list_version)
         msg = {
             'description:': items['description'],
             'minimum bid:': items['minimum bid'],
