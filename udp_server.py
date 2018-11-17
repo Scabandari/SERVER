@@ -175,7 +175,7 @@ class UDPServer(threading.Thread):
             self.send_all_clients(all_clients_msg)
             self.update_clients()
             # WE CREATE A TCP SERVER FOR EVERY ITEM ON OFFER!!
-            server_for_item = TCPServer(self.host, item['port #'], self.state, self.state_lock, self.txt_file)
+            server_for_item = TCPServer(self.host, item['port #'], self.state, self.state_lock, self.txt_file, response['item #'])
             server_for_item.start()
             self.item_servers.append(server_for_item)
         return response
@@ -213,7 +213,7 @@ class UDPServer(threading.Thread):
             'seller': msg['name'],
             'highest bid': (msg['minimum bid'], "No bids yet"),  # todo item['highest bid'][1] should be name of highest bidder192.168.0.107
             'open status': 1,  # todo 1 was True but when changing from dict to bytes True becomes true and causes a problem
-            'starting time': int(time.time()),
+            'starting time': int(time.time()), # time in seconds
             'port #': self.item_port
         }
         self.item_port += 1

@@ -39,7 +39,7 @@ udp_server = UDPServer(
     state_lock=state_lock,
     txt_file=TEXT_FILE
 )
-
+"""
 tcp_server = TCPServer(
     host=host,
     port=tcp_port,
@@ -47,7 +47,7 @@ tcp_server = TCPServer(
     state_lock=state_lock,
     txt_file=TEXT_FILE
 )
-
+"""
 udp_server.start()
 #tcp_server.start()
 

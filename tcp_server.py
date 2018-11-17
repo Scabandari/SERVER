@@ -1,7 +1,7 @@
 import threading
 from time import sleep
 import socket
-import ast
+from utils import get_item, get_highest_bid
 from client_connection import ClientConnection, all_client_messages
 
 
@@ -11,9 +11,10 @@ from client_connection import ClientConnection, all_client_messages
 
 class TCPServer(threading.Thread):
     HIGHEST = 'HIGHEST'
+    BID_OVER = 'BID_OVER'
 
     # state will be a dict in main.py must be backed up in .txt file
-    def __init__(self, host, port, state, state_lock, txt_file):
+    def __init__(self, host, port, state, state_lock, txt_file, item_number):
         self.host = host
         self.port = port
         self.state = state
@@ -22,6 +23,8 @@ class TCPServer(threading.Thread):
         self.all_clients_lock = threading.Lock()
         self.state_lock = state_lock  # locks access to state, update .txt file while lock held
         self.connection_list = []
+        self.count_down = 300
+        self.item_number = item_number
         self.messages = []  # list of msg's or dicts sent from clients over tcp
         self.continue_thread = True  # set to False if we want to terminate thread
         self.start_listening = False
@@ -37,6 +40,8 @@ class TCPServer(threading.Thread):
         send_all_clients.start()
         listen_to_clients = threading.Thread(target=self.listen_to_clients)
         listen_to_clients.start()
+        count_down_timer = threading.Thread(target=self.countdown_timer)
+        count_down_timer.start()
         while self.continue_thread:
             # (conn, (ip, port)) = self.tcp_socket.accept()
             (conn, addr) = self.tcp_socket.accept()
@@ -93,12 +98,24 @@ class TCPServer(threading.Thread):
             else:
                 pass
 
+    def countdown_timer(self):
+        print("Counter has started: 5 minutes till bid close")
+        sleep(self.count_down)
+        print('5 minutes are over, bid will now close')
+        highest_bid = get_highest_bid(get_item(self.port, self.state))
+        msg = {
+            'type': self.BID_OVER,
+            'item #': self.item_number,
+            'amount': highest_bid
+        }
+        self.send_all_clients.append(msg)
 
     def winning_bid(self):
         print("winning bid")
 
 
     def bid_over(self):
+
         print("Bid Over")
     
 
