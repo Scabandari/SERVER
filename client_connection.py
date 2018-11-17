@@ -70,23 +70,24 @@ class ClientConnection(threading.Thread):
         curr_max_bid = get_highest_bid(item_for_bid)
         # converting into int to use in comparator
         if amount <= curr_max_bid:
-            response = self.respond_bid(msg_received, False)
+            response = self.respond_bid(msg_received, amount, False)
         else:  # bid success, item details will now be modified to reflect new information
-            response = self.respond_bid(msg_received, True)
-            for item in self.state['items open']:
+            response = self.respond_bid(msg_received, amount, True)
+            for item in self.state['items']:
                 # function below just returns "ryan", it won't be implemented until we attach actual port number
                 # to the client
                 # name = get_bidder_name(portNumber, state)
-                item['highest bid'] = (amount, "ryan")
+                if item['port #'] == self.itemPort:
+                    item['highest bid'] = (amount, "ryan")
         return response
 
-    def respond_bid(self, msg_received, success):
+    def respond_bid(self, msg_received, amount, success):
         if success is True:
-            msg = {
-                'type:':'BID',
-                'request:':msg_received['request'],
-                'highest bid':msg_received['highest bid'],
-                'item #':msg_received['item #']
+            msg = {  # specifiers based on bid message generated in getBid() function by adam in util.py in client
+                'type:': 'BID',
+                'request:': msg_received['request'],
+                'amount': amount,
+                'item #': msg_received['item']
             }
 
             # does the following: writes to state file to update highest bid

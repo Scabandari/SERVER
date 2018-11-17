@@ -258,7 +258,7 @@ class UDPServer(threading.Thread):
 
     # needs to be modified to find all potential items
     def get_item_port(self, msg):
-        items = self.state['items open']
+        items = self.state['items']
         port = items[0]['port #']
         msg = {
             'type': 'ITEMPORT',

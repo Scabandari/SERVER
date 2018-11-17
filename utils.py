@@ -111,29 +111,31 @@ def under_three_opens(name, state):
 
 def get_item_descriptions(state):
     list_of_items = {}
-    for items in state["items open"]:
-        # copying highest bid + highest bidder name below so that i change the highest bidder value to empty string
-        # if its value is None. This is to avoid conversion errors from using the ast library
-        high_bid_plus_bidder = items['highest bid']
-        list_version = list(high_bid_plus_bidder)  # because tuples are immutable
-        if list_version[1] is None:
-            list_version[1] = 'no one'
-        high_bid_plus_bidder = tuple(list_version)
-        msg = {
-            'description:': items['description'],
-            'minimum bid:': items['minimum bid'],
-            'highest bid:': high_bid_plus_bidder,
-            'port #': items['port #']
-        }
-        list_of_items.update(msg)
+    for items in state["items"]:
+        if items['open status'] == 1:
+            # copying highest bid + highest bidder name below so that i change the highest bidder value to empty string
+            # if its value is None. This is to avoid conversion errors from using the ast library
+            high_bid_plus_bidder = items['highest bid']
+            list_version = list(high_bid_plus_bidder)  # because tuples are immutable
+            if list_version[1] is None:
+                list_version[1] = 'no one'
+            high_bid_plus_bidder = tuple(list_version)
+            msg = {
+                'description:': items['description'],
+                'minimum bid:': items['minimum bid'],
+                'highest bid:': high_bid_plus_bidder,
+                'port #': items['port #']
+            }
+            list_of_items.update(msg)
     return list_of_items
 
 
 def get_item(portNumber, state):
     item_for_bid = {}
-    for items in state['items open']:
-        if items['port #'] == portNumber:
-            item_for_bid.update(items)
+    for items in state['items']:
+        if items['open status'] == 1:
+            if items['port #'] == portNumber:
+                item_for_bid.update(items)
     return item_for_bid
 
 # Function below won't work yet because the port associated with the client connection is
