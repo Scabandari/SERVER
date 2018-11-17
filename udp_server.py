@@ -12,7 +12,8 @@ from utils import (dict_to_bytes,
                    has_open_items,
                    under_three_opens,
                    client_connected,
-                   is_ip)
+                   is_ip,
+                   get_item_descriptions)
 
 
 class UDPServer(threading.Thread):
@@ -25,6 +26,8 @@ class UDPServer(threading.Thread):
     UNKNOWN = 'UNKNOWN'
     OFFER = 'OFFER'
     NEW_ITEM = 'NEW-ITEM'
+    SHOW_ITEMS = 'SHOW_ITEMS'
+    GETPORT = 'GETPORT'
     UPDATE_CLIENTS = 'UPDATE-CLIENTS'
 
     # state will be a dict in main.py must be backed up in .txt file
@@ -54,6 +57,11 @@ class UDPServer(threading.Thread):
             msg_received = ast.literal_eval(data)  # unpacked as a dict object
             return_msg = self.handle_response(msg_received)
             return_msg = dict_to_bytes(return_msg)
+            # used to test whether the return message is as expected
+            print("###")
+            print(return_msg)
+            print("###")
+            # end of test print statements
             self.udp_socket.sendto(return_msg, return_address)
         self.udp_socket.close()
         print("UDPServer run function complete. UDP socket connection closed")
@@ -167,11 +175,23 @@ class UDPServer(threading.Thread):
             self.send_all_clients(all_clients_msg)
             self.update_clients()
             # WE CREATE A TCP SERVER FOR EVERY ITEM ON OFFER!!
-            server_for_item = TCPServer(self.host, item['port #'], self.state, self.state_lock, self.txt_file)
+            server_for_item = TCPServer(self.host, item['port #'], self.state, self.state_lock, self.txt_file, response['item #'])
             server_for_item.start()
             self.item_servers.append(server_for_item)
         return response
+        
+    def ack_show_all_messages(self, msg_received):
+        list_of_items = get_item_descriptions(self.state)
+        response = self.gen_list_of_all_open_items(list_of_items)
+        return response
 
+    # Appends the type classifier to the list of items to obey messaging protocol
+
+    def gen_list_of_all_open_items(self, list_of_items):
+        return_msg = {'type': UDPServer.SHOW_ITEMS}
+        return_msg.update(list_of_items)
+        return return_msg
+        
     def send_all_clients(self, msg):
         """
         This functions sends msg to all clients in self.connected_clients
@@ -193,7 +213,7 @@ class UDPServer(threading.Thread):
             'seller': msg['name'],
             'highest bid': (msg['minimum bid'], "No bids yet"),  # todo item['highest bid'][1] should be name of highest bidder192.168.0.107
             'open status': 1,  # todo 1 was True but when changing from dict to bytes True becomes true and causes a problem
-            'starting time': int(time.time()),
+            'starting time': int(time.time()), # time in seconds
             'port #': self.item_port
         }
         self.item_port += 1
@@ -236,6 +256,16 @@ class UDPServer(threading.Thread):
             }
         return msg
 
+    # needs to be modified to find all potential items
+    def get_item_port(self, msg):
+        items = self.state['items']
+        port = items[0]['port #']
+        msg = {
+            'type': 'ITEMPORT',
+            'port': port
+        }
+        return msg
+
     def handle_response(self, msg_received):
         """This function accepts the incoming dict and checks the type so it
             can call the corresponding ack function. It should return both a success msg
@@ -249,6 +279,10 @@ class UDPServer(threading.Thread):
             response = self.ack_de_register(msg_received)
         elif type_ == UDPServer.OFFER:
             response = self.ack_offer(msg_received)
+        elif type_ == UDPServer.SHOW_ITEMS:
+            response = self.ack_show_all_messages(msg_received)
+        elif type_ == UDPServer.GETPORT:
+            response = self.get_item_port(msg_received)
         else:
             print("ERROR: UDP msg received with unknown type")  # todo change this
             error_msg = "Cannot handle msg of type: {}".format(msg_received['type'])

@@ -19,7 +19,8 @@ state = {'clients': [],  # list of dicts: name, ip, port
         }
 """
 AUCTION_TIME = 300  # number of seconds items should be up for bid
-ipadd = input("Please Enter host IP address: ")
+#ipadd = input("Please Enter host IP address: ")
+ipadd = "192.168.1.12"
 host = ipadd
 udp_port = 5024
 tcp_port = 5002
@@ -38,7 +39,7 @@ udp_server = UDPServer(
     state_lock=state_lock,
     txt_file=TEXT_FILE
 )
-
+"""
 tcp_server = TCPServer(
     host=host,
     port=tcp_port,
@@ -46,7 +47,7 @@ tcp_server = TCPServer(
     state_lock=state_lock,
     txt_file=TEXT_FILE
 )
-
+"""
 udp_server.start()
 #tcp_server.start()
 

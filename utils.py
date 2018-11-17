@@ -109,9 +109,50 @@ def under_three_opens(name, state):
     return counter < 3
 
 
+def get_item_descriptions(state):
+    list_of_items = {}
+    for items in state["items"]:
+        if items['open status'] == 1:
+            # copying highest bid + highest bidder name below so that i change the highest bidder value to empty string
+            # if its value is None. This is to avoid conversion errors from using the ast library
+            high_bid_plus_bidder = items['highest bid']
+            list_version = list(high_bid_plus_bidder)  # because tuples are immutable
+            if list_version[1] is None:
+                list_version[1] = 'no one'
+            high_bid_plus_bidder = tuple(list_version)
+            msg = {
+                'description:': items['description'],
+                'minimum bid:': items['minimum bid'],
+                'highest bid:': high_bid_plus_bidder,
+                'port #': items['port #']
+            }
+            list_of_items.update(msg)
+    return list_of_items
 
 
+def get_item(portNumber, state):
+    item_for_bid = {}
+    for items in state['items']:
+        if items['open status'] == 1:
+            if items['port #'] == portNumber:
+                item_for_bid.update(items)
+    return item_for_bid
 
+# Function below won't work yet because the port associated with the client connection is
+# not the port nb associated with the client in the state file
+
+def get_bidder_name(portNumber,state):
+    bidder_name = ""
+    for client in state['clients']:
+        if client['port'] == portNumber:
+            bidder_name = client['name']
+    return bidder_name
+
+
+def get_highest_bid(item):
+    max_bid_plus_client= item['highest bid']
+    return_value = max_bid_plus_client[0]
+    return return_value
 
 
 
