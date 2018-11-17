@@ -1,6 +1,7 @@
 import threading
 from time import sleep
 import socket
+import ast
 from client_connection import ClientConnection
 
 
@@ -9,7 +10,8 @@ from client_connection import ClientConnection
 
 
 class TCPServer(threading.Thread):
-    
+    HIGHEST = 'HIGHEST'
+
     # state will be a dict in main.py must be backed up in .txt file
     def __init__(self, host, port, state, state_lock, txt_file):
         self.host = host
@@ -32,6 +34,8 @@ class TCPServer(threading.Thread):
         print("TCP connection started on server side")
         send_all_clients = threading.Thread(target=self.check_all_clients)
         send_all_clients.start()
+        listen_to_clients = threading.Thread(target=self.listen_to_clients)
+        listen_to_clients.start()
         while self.continue_thread:
             # (conn, (ip, port)) = self.tcp_socket.accept()
             (conn, addr) = self.tcp_socket.accept()
@@ -63,27 +67,24 @@ class TCPServer(threading.Thread):
                     client.send_msg(all_clients_msg)
             sleep(0.2)  # sleep 200 millis and make sure others can easily acquire all_clients_lock
 
+    def listen_to_clients(self):
+        """This function keeps listening for new messages from the clients connected to the item's tcp connection
+        once it detects that a message has been sent (it will be the highest message, it processes it and adds it
+        to send all clients"""
+        while self.continue_thread:
+            # need to add lock when more than one thread
+            data = self.tcp_socket.recv(1024)
+            data = data.decode('ascii')  # data.decode('utf-8')
+            msg_received = ast.literal_eval(data)  # unpacked as a dict object
+            self.handle_response(msg_received)
     
-    
-    def bidding(self, msg):
-        
-        print("Bid")
-    
-    
-
-
-
-    def highest_bid(self):
-        print("highest Bid")
-
-
-
+    def handle_response(self, msg_received):
+        if msg_received['type'] == self.HIGHEST:
+            self.send_all_clients.append(msg_received)
 
 
     def winning_bid(self):
         print("winning bid")
-
-
 
 
     def bid_over(self):

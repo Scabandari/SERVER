@@ -1,5 +1,6 @@
 import ast
 import threading
+import socket
 from utils import (dict_to_bytes,
                    name_registered,
                    update_txt_file,
@@ -17,7 +18,7 @@ from utils import (dict_to_bytes,
 
 
 class ClientConnection(threading.Thread):
-    BID = 'BID' #when bid is good, meaning its the highest bid
+    BID = 'BID'  # when bid is good, meaning its the highest bid
     BID_LOW = 'BID_LOW'
 
     def __init__(self, ip, port, connection, state, state_lock, txt_file, itemPort):
@@ -28,7 +29,11 @@ class ClientConnection(threading.Thread):
         self.txt_file = txt_file
         self.state_lock = state_lock
         self.itemPort = itemPort
-        #self.OFFER = 'OFFER'
+        self.connect_to_item = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.connect_to_item.connect((ip, itemPort))
+        # self.OFFER = 'OFFER'
+        # creating a tcp socket so that each client connection thread can send a message indicating that a new
+        # highest bid has been made to the tcp connection for the item
         threading.Thread.__init__(self)
         print("Starting tcp socket connection with client at " + str(ip) + " port " + str(port))
 
@@ -79,25 +84,26 @@ class ClientConnection(threading.Thread):
                 # name = get_bidder_name(portNumber, state)
                 if item['port #'] == self.itemPort:
                     item['highest bid'] = (amount, "ryan")
+                    # update_txt_file(self.state, self.txt_file)
         return response
 
     def respond_bid(self, msg_received, amount, success):
         if success is True:
             msg = {  # specifiers based on bid message generated in getBid() function by adam in util.py in client
-                'type:': 'BID',
-                'request:': msg_received['request'],
+                'type': 'BID',
+                'request': msg_received['request'],
                 'amount': amount,
                 'item #': msg_received['item']
             }
-
+            self.highest_bid(msg_received['item'], amount)
             # does the following: writes to state file to update highest bid
             # sends the highest bid message to all clients
         else:
             msg = {
-                'type:': 'BID_LOW',
-                'request:': msg_received['request'],
-                'minimum bid:': msg_received['minimum bid'],
-                'reason:': 'your bid is too low, MO MONEY!'
+                'type': 'BID_LOW',
+                'request': msg_received['request'],
+                'minimum bid': msg_received['minimum bid'],
+                'reason': 'your bid is too low, MO MONEY!'
             }
         return msg
 
@@ -106,6 +112,13 @@ class ClientConnection(threading.Thread):
         msg = str(msg)
         self.connection.send(msg.encode('utf-8'))
 
-
+    def highest_bid(self, item_nb, amount):
+        msg = {
+            'type': 'HIGHEST',
+            'item #': item_nb,
+            'amount': amount
+        }
+        msg = str(msg)
+        self.connect_to_item.send(msg.encode('utf-8'))
 
 
