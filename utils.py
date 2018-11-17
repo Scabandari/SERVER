@@ -54,8 +54,8 @@ def bytes_to_dict(bytes_):
 def top_bidder(name, state):
     """this functions takes a name and returns true if that client is the
         top bidder on any open items for bid"""
-    for item in state['items open']:
-        if name == item['highest bid'][1]:
+    for item in state['items']:
+        if item['open status'] is True and name == item['highest bid'][1]:
             return True
     return False
 """ state looks like...
@@ -93,8 +93,8 @@ def name_matches_ip(name, ip,  state):
 
 def has_open_items(name, state):
     """If the client with this name has items open for bid return True"""
-    for item in state['items open']:
-        if item['seller'] == name:
+    for item in state['items']:
+        if item['open status'] is True and item['seller'] == name:
             return True
     return False
 
@@ -103,7 +103,7 @@ def under_three_opens(name, state):
     """If adding another item for bid would give the client with this name more
         than 3 items up for bid return true, else false"""
     counter = 0
-    for item in state['items open']:
+    for item in state['items']:
         if item['seller'] == name:
             counter += 1
     return counter < 3
@@ -151,6 +151,8 @@ def get_highest_bid(item):
     max_bid_plus_client= item['highest bid']
     return_value = max_bid_plus_client[0]
     return return_value
+
+
 
 
 
