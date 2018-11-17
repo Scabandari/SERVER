@@ -2,7 +2,7 @@ import threading
 from time import sleep
 import socket
 import ast
-from client_connection import ClientConnection
+from client_connection import ClientConnection, all_client_messages
 
 
 """We have a TCPServer for each item on bid, self.connection_list[] is a list of bidders ie clients
@@ -24,6 +24,7 @@ class TCPServer(threading.Thread):
         self.connection_list = []
         self.messages = []  # list of msg's or dicts sent from clients over tcp
         self.continue_thread = True  # set to False if we want to terminate thread
+        self.start_listening = False
         self.tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.tcp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.tcp_socket.bind((host, port))
@@ -52,6 +53,7 @@ class TCPServer(threading.Thread):
             conn.send(connection_success.encode('utf-8'))
             newthread = ClientConnection(addr[0], addr[1], conn, self.state, self.state_lock, self.txt_file, self.port)
             newthread.start()
+            self.start_listening = True
             self.connection_list.append(newthread)
 
     def check_all_clients(self):
@@ -64,6 +66,10 @@ class TCPServer(threading.Thread):
                     all_clients_msg = self.send_all_clients.pop(0)
             if all_clients_msg:
                 for client in self.connection_list:
+                    print(client)
+                    print("#")
+                    print(all_clients_msg)
+                    print("#")
                     client.send_msg(all_clients_msg)
             sleep(0.2)  # sleep 200 millis and make sure others can easily acquire all_clients_lock
 
@@ -72,15 +78,20 @@ class TCPServer(threading.Thread):
         once it detects that a message has been sent (it will be the highest message, it processes it and adds it
         to send all clients"""
         while self.continue_thread:
-            # need to add lock when more than one thread
-            data = self.tcp_socket.recv(1024)
-            data = data.decode('ascii')  # data.decode('utf-8')
-            msg_received = ast.literal_eval(data)  # unpacked as a dict object
-            self.handle_response(msg_received)
-    
-    def handle_response(self, msg_received):
-        if msg_received['type'] == self.HIGHEST:
-            self.send_all_clients.append(msg_received)
+            if all_client_messages:
+                if not self.send_all_clients:
+                    self.send_all_clients.append(all_client_messages.pop(0))
+                else:
+                    return_msg = all_client_messages.pop(0)
+                    for msg in self.send_all_clients:
+
+                        if msg['item #'] == return_msg['item #'] and \
+                                msg['amount'] == return_msg['amount']:
+                            pass
+                        else:
+                            self.send_all_clients.append(return_msg)
+            else:
+                pass
 
 
     def winning_bid(self):

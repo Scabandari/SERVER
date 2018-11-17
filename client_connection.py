@@ -16,21 +16,22 @@ from utils import (dict_to_bytes,
                    get_highest_bid)
 # referenced here: https://www.techbeamers.com/python-tutorial-write-multithreaded-python-server/
 
+all_client_messages = [{}]
+
 
 class ClientConnection(threading.Thread):
     BID = 'BID'  # when bid is good, meaning its the highest bid
     BID_LOW = 'BID_LOW'
 
-    def __init__(self, ip, port, connection, state, state_lock, txt_file, itemPort):
+    def __init__(self, ip, port, connection, state, state_lock, txt_file, item_port):
         self.ip = ip
         self.port = port
         self.connection = connection
         self.state = state
         self.txt_file = txt_file
         self.state_lock = state_lock
-        self.itemPort = itemPort
+        self.item_port = item_port
         self.connect_to_item = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.connect_to_item.connect((ip, itemPort))
         # self.OFFER = 'OFFER'
         # creating a tcp socket so that each client connection thread can send a message indicating that a new
         # highest bid has been made to the tcp connection for the item
@@ -71,7 +72,7 @@ class ClientConnection(threading.Thread):
 
     def ack_bid(self, msg_received):
         amount = int(msg_received['amount'])
-        item_for_bid = get_item(self.itemPort, self.state)
+        item_for_bid = get_item(self.item_port, self.state)
         curr_max_bid = get_highest_bid(item_for_bid)
         # converting into int to use in comparator
         if amount <= curr_max_bid:
@@ -82,7 +83,7 @@ class ClientConnection(threading.Thread):
                 # function below just returns "ryan", it won't be implemented until we attach actual port number
                 # to the client
                 # name = get_bidder_name(portNumber, state)
-                if item['port #'] == self.itemPort:
+                if item['port #'] == self.item_port:
                     item['highest bid'] = (amount, "ryan")
                     # update_txt_file(self.state, self.txt_file)
         return response
@@ -113,12 +114,16 @@ class ClientConnection(threading.Thread):
         self.connection.send(msg.encode('utf-8'))
 
     def highest_bid(self, item_nb, amount):
+        # item_tcp_address = (self.ip, self.item_port)
+        # self.connect_to_item.connect(item_tcp_address)
         msg = {
             'type': 'HIGHEST',
             'item #': item_nb,
             'amount': amount
         }
-        msg = str(msg)
-        self.connect_to_item.send(msg.encode('utf-8'))
+        global all_client_messages
+        all_client_messages.append(msg)
+        # self.connect_to_item.sendto(msg.encode('utf-8'), (self.ip, self.item_port))
+        # self.connect_to_item.close()
 
 
