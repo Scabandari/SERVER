@@ -26,7 +26,7 @@ class TCPServer(threading.Thread):
         self.all_clients_lock = threading.Lock()
         self.state_lock = state_lock  # locks access to state, update .txt file while lock held
         self.connection_list = []
-        self.count_down = 25
+        self.count_down = 100  # change to 300 for five min auction
         self.item_number = item_number
         self.messages = []  # list of msg's or dicts sent from clients over tcp
         self.continue_thread = True  # set to False if we want to terminate thread
