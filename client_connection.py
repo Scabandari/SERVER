@@ -22,7 +22,7 @@ all_client_messages = [{}]
 class ClientConnection(threading.Thread):
     BID = 'BID'  # when bid is good, meaning its the highest bid
     BID_LOW = 'BID_LOW'
-
+    WIN = 'WIN'
     def __init__(self, ip, port, connection, state, state_lock, txt_file, item_port):
         self.ip = ip
         self.port = port
@@ -109,10 +109,24 @@ class ClientConnection(threading.Thread):
         return msg
 
     def send_msg(self, msg):
-        """msg: a dict to be sent to the client"""
         msg = str(msg)
         self.connection.send(msg.encode('utf-8'))
 
+
+        '''
+        """msg: a dict to be sent to the client"""
+        if msg['type'] == self.WIN:
+            if msg['ip'] == self.ip:  # means this client is the winner
+                self.connection.send(msg.encode('utf-8'))
+        else:
+            msg = str(msg)
+            self.connection.send(msg.encode('utf-8'))
+        '''
+    """
+    def send_winner(self, msg):
+        msg = str(msg)
+        self.connection.send(msg.encode('utf-8'))
+    """
     def highest_bid(self, item_nb, amount):
         # item_tcp_address = (self.ip, self.item_port)
         # self.connect_to_item.connect(item_tcp_address)
