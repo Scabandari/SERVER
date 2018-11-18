@@ -12,6 +12,7 @@ from utils import (dict_to_bytes,
                    has_open_items,
                    under_three_opens,
                    client_connected,
+                   getItem,
                    is_ip)
 
 
@@ -200,6 +201,8 @@ class UDPServer(threading.Thread):
         with self.state_lock:
             self.state['items'].append(item)
             update_txt_file(self.state, self.txt_file)
+
+        #new_item = getItem(item['port #'], self.state)
         return item
 
     def de_reg_success(self, name):

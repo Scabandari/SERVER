@@ -1,6 +1,7 @@
 import json
 import ast
 import ipaddress
+from copy import deepcopy
 
 
 def client_connected(ip_port, connection_list):
@@ -109,7 +110,20 @@ def under_three_opens(name, state):
     return counter < 3
 
 
+# def getItem(portNumber,state):
+#     #port = int(portNumber)
+#     itemForBid = {}
+#     for items in state['items']:
+#         if items['port #'] == portNumber:
+#             itemForBid.update(items)
+#     return itemForBid
 
+
+def getItem(portNumber,state):
+    #port = int(portNumber)
+    for items in state['items']:
+        if items['port #'] == portNumber:
+            return deepcopy(items)
 
 
 
