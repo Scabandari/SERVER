@@ -2,7 +2,7 @@ import threading
 from time import sleep
 import socket
 from utils import get_item, get_highest_bid, get_highest_bidder, get_client
-from client_connection import ClientConnection, all_client_messages
+from client_connection import ClientConnection, all_client_messages, the_winning_message
 
 
 """We have a TCPServer for each item on bid, self.connection_list[] is a list of bidders ie clients
@@ -26,7 +26,7 @@ class TCPServer(threading.Thread):
         self.all_clients_lock = threading.Lock()
         self.state_lock = state_lock  # locks access to state, update .txt file while lock held
         self.connection_list = []
-        self.count_down = 100  # change to 300 for five min auction
+        self.count_down = 20  # change to 300 for five min auction
         self.item_number = item_number
         self.messages = []  # list of msg's or dicts sent from clients over tcp
         self.continue_thread = True  # set to False if we want to terminate thread
@@ -113,7 +113,7 @@ class TCPServer(threading.Thread):
             'amount': highest_bid
         }
         self.send_all_clients.append(msg)
-    '''
+
     def winning_bid(self, item):
         highest_bid = get_highest_bid(item)
         highest_bidder = get_highest_bidder(item)
@@ -126,9 +126,8 @@ class TCPServer(threading.Thread):
             'port #': client['port'],
             'amount': highest_bid
         }
-        for client in self.connection_list:
-            client.send_msg(msg)
-    '''
+        the_winning_message.append(msg)
+
     def handle_end_of_bid(self):
         return_msg = {}
         item = get_item(self.port, self.state)

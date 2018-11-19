@@ -14,10 +14,11 @@ from utils import (dict_to_bytes,
                    get_item_descriptions,
                    get_item,
                    get_highest_bid)
+
 # referenced here: https://www.techbeamers.com/python-tutorial-write-multithreaded-python-server/
 
-all_client_messages = [{}]
-
+all_client_messages = [{}]  # if all_client_messages = True
+the_winning_message = []  # if the_winning_message = False : be mindful of the diff between the two syntax
 
 class ClientConnection(threading.Thread):
     BID = 'BID'  # when bid is good, meaning its the highest bid
@@ -41,6 +42,8 @@ class ClientConnection(threading.Thread):
     def run(self):
         """This class functions as its own thread. The run function is what the thread does"""
         print("ClientConnection run method started")
+        # check_for_winning_message = threading.Thread(target=self.check_for_win_thread)
+        # check_for_winning_message.start()
         while True:
             # data = connection.recv(1024).decode('ascii')
             data = self.connection.recv(1024).decode('utf-8')
@@ -140,4 +143,17 @@ class ClientConnection(threading.Thread):
         # self.connect_to_item.sendto(msg.encode('utf-8'), (self.ip, self.item_port))
         # self.connect_to_item.close()
 
-
+    def check_for_win_thread(self):
+        while True:
+            if the_winning_message:
+                msg = the_winning_message.pop(0)
+                if msg['port #'] == self.item_port:
+                    response = str(msg)
+                    self.connection.send(response.encode('utf-8'))
+                else:
+                    response = {
+                        'type': 'You didnt win',
+                        'reason': 'You too poor'
+                    }
+                    response = str(msg)
+                    self.connection.send(response.encode('utf-8'))
