@@ -12,7 +12,7 @@ from utils import (dict_to_bytes,
                    has_open_items,
                    under_three_opens,
                    client_connected,
-                   getItem,
+                   #getItem,
                    is_ip,
                    get_item_descriptions)
 
@@ -47,6 +47,8 @@ class UDPServer(threading.Thread):
         self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.udp_socket.bind((host, port))
         threading.Thread.__init__(self)
+
+    (0, 'REGISTER', "{'name': 'rr', 'type': 'REGISTER', 'ip': '11', 'request': 0, 'port': '22'}")
 
     def run(self):
         print("UDP connection started on server side.")
