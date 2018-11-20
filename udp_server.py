@@ -12,6 +12,7 @@ from utils import (dict_to_bytes,
                    has_open_items,
                    under_three_opens,
                    client_connected,
+                   #getItem,
                    is_ip,
                    get_item_descriptions)
 
@@ -46,6 +47,8 @@ class UDPServer(threading.Thread):
         self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.udp_socket.bind((host, port))
         threading.Thread.__init__(self)
+
+    (0, 'REGISTER', "{'name': 'rr', 'type': 'REGISTER', 'ip': '11', 'request': 0, 'port': '22'}")
 
     def run(self):
         print("UDP connection started on server side.")
@@ -163,8 +166,10 @@ class UDPServer(threading.Thread):
         else:
             print("Bid starting at time.time(): {}".format(time.time()))
             # todo broadcast new item msg to all registered clients on success
-            item = self.offer_success(msg_received)
-            response = self.respond_offer(msg_received, True)
+            item_number = self.next_item
+            self.next_item += 1
+            item = self.offer_success(msg_received, item_number)
+            response = self.respond_offer(msg_received, True, item_number)
             all_clients_msg = {
                 'type': UDPServer.NEW_ITEM,
                 'description': response['description'],
@@ -179,7 +184,7 @@ class UDPServer(threading.Thread):
             server_for_item.start()
             self.item_servers.append(server_for_item)
         return response
-        
+
     def ack_show_all_messages(self, msg_received):
         list_of_items = get_item_descriptions(self.state)
         response = self.gen_list_of_all_open_items(list_of_items)
@@ -191,23 +196,22 @@ class UDPServer(threading.Thread):
         return_msg = {'type': UDPServer.SHOW_ITEMS}
         return_msg.update(list_of_items)
         return return_msg
-        
+
     def send_all_clients(self, msg):
         """
         This functions sends msg to all clients in self.connected_clients
         :param msg:
         :return: None
         """
-        # todo We're sending the NEW-ITEM msg to all clients but we're only supposed to send it
-        # todo registered clients?
         for client_address in self.connected_clients:
             send_msg = dict_to_bytes(msg)
             self.udp_socket.sendto(send_msg, client_address)
 
-    def offer_success(self, msg):
+    def offer_success(self, msg, item_number):
         """Updates state and the text file and returns a msg to be sent back to
             client"""
         item = {
+            'item #': item_number,
             'description': msg['description'],
             'minimum bid': msg['minimum bid'],
             'seller': msg['name'],
@@ -237,7 +241,7 @@ class UDPServer(threading.Thread):
             update_txt_file(self.state, self.txt_file)
             print("killing time")
 
-    def respond_offer(self, msg, success, reason=None):
+    def respond_offer(self, msg, success, item_number, reason=None):
         """This function is called to respond to the clients OFFER type msg"""
         if success is True:
             msg = {
@@ -245,9 +249,9 @@ class UDPServer(threading.Thread):
                 'request': msg['request'],
                 'description': msg['description'],
                 'minimum bid': msg['minimum bid'],
-                'item #': self.next_item
+                'item #': item_number
             }
-            self.next_item += 1
+
         else:
             msg = {
                 'type': 'OFFER-DENIED',

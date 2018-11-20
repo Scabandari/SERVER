@@ -1,1 +1,1 @@
-{'clients': [{'name': 'ryan', 'ip': '192.168.0.107', 'port': 5010}], 'items': [{'description': 'bat', 'minimum bid': 10, 'seller': 'ryan', 'highest bid': (10, 'No bids yet'), 'open status': 1, 'starting time': 1542480688, 'port #': 5050}]}
+{'clients': [{'port': '111', 'name': 'rr', 'ip': '192.168.0.107'}], 'items': [{'minimum bid': '10', 'starting time': 1542747570, 'item #': 1, 'port #': 5050, 'description': 'bat', 'seller': 'rr', 'highest bid': ('10', 'No bids yet'), 'open status': 1}]}

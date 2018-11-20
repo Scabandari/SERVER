@@ -20,8 +20,11 @@ state = {'clients': [],  # list of dicts: name, ip, port
 """
 AUCTION_TIME = 300  # number of seconds items should be up for bid
 #ipadd = input("Please Enter host IP address: ")
-ipadd = "192.168.1.184"
-host = ipadd
+ipadd = "192.168.1.12"
+#host = ipadd
+host = '192.168.0.107'
+
+
 udp_port = 5024
 tcp_port = 5002
 state_lock = threading.Lock()
