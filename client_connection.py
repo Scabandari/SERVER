@@ -87,7 +87,7 @@ class ClientConnection(threading.Thread):
                 # to the client
                 # name = get_bidder_name(portNumber, state)
                 if item['port #'] == self.item_port:
-                    item['highest bid'] = (amount, "ryan")
+                    item['highest bid'] = (amount, msg_received['name'])
                     # update_txt_file(self.state, self.txt_file)
         return response
 
