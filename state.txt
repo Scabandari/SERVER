@@ -1,1 +1,0 @@
-{'clients': [{'name': 'ryan', 'ip': '192.168.0.107', 'port': 5010}], 'items': [{'item #': 1, 'description': 'bat', 'minimum bid': 10, 'seller': 'ryan', 'highest bid': (10, 'No bids yet'), 'open status': 1, 'starting time': 1543613001, 'port #': 5050}]}
