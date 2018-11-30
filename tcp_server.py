@@ -1,10 +1,10 @@
 import threading
 from time import sleep
 import socket
-from utils import get_item, get_highest_bid
+from utils import get_item, get_highest_bid, get_highest_bidder, get_client
 from client_connection import ClientConnection, all_client_messages
 
-
+the_winning_message = []  # if the_winning_message = False : be mindful of the diff between the two syntax
 """We have a TCPServer for each item on bid, self.connection_list[] is a list of bidders ie clients
     who have successfully connected over tcp to ip + port for specific item on bid. """
 
@@ -12,6 +12,9 @@ from client_connection import ClientConnection, all_client_messages
 class TCPServer(threading.Thread):
     HIGHEST = 'HIGHEST'
     BID_OVER = 'BID_OVER'
+    BID_SOLDTO = 'BID_SOLDTO'
+    BID_NOTSOLD = 'BID_NOTSOLD'
+    WIN = 'WIN'
 
     # state will be a dict in main.py must be backed up in .txt file
     def __init__(self, host, port, state, state_lock, txt_file, item_number):
@@ -23,7 +26,7 @@ class TCPServer(threading.Thread):
         self.all_clients_lock = threading.Lock()
         self.state_lock = state_lock  # locks access to state, update .txt file while lock held
         self.connection_list = []
-        self.count_down = 300
+        self.count_down = 40  # change to 300 for five min auction
         self.item_number = item_number
         self.messages = []  # list of msg's or dicts sent from clients over tcp
         self.continue_thread = True  # set to False if we want to terminate thread
@@ -102,6 +105,7 @@ class TCPServer(threading.Thread):
         print("Counter has started: 5 minutes till bid close")
         sleep(self.count_down)
         print('5 minutes are over, bid will now close')
+        self.handle_end_of_bid()
         highest_bid = get_highest_bid(get_item(self.port, self.state))
         msg = {
             'type': self.BID_OVER,
@@ -110,20 +114,50 @@ class TCPServer(threading.Thread):
         }
         self.send_all_clients.append(msg)
 
-    def winning_bid(self):
-        print("winning bid")
+    def winning_bid(self, item):
+        highest_bid = get_highest_bid(item)
+        highest_bidder = get_highest_bidder(item)
+        client = get_client(highest_bidder, self.state)
+        msg = {
+            'type': self.WIN,
+            'item #': self.item_number,
+            'name': client['name'],
+            'ip address': client['ip'],
+            'port #': client['port'],
+            'amount': highest_bid
+        }
+        the_winning_message.append(msg)
 
+    def handle_end_of_bid(self):
+        return_msg = {}
+        item = get_item(self.port, self.state)
+        if item['highest bid'][1] == 'No bids yet':
+            return_msg.update(self.not_sold())
+        else:  # send out sold to all and win to only the winning client
+            self.winning_bid(item)
+            return_msg.update(self.sold_to(item))
+        self.send_all_clients.append(return_msg)
 
-    def bid_over(self):
+    def sold_to(self, item):
+        highest_bid = get_highest_bid(item)
+        highest_bidder = get_highest_bidder(item)
+        client = get_client(highest_bidder, self.state)
+        msg = {
+            'type': self.BID_SOLDTO,
+            'item #': self.item_number,
+            'name': client['name'],
+            'ip address': client['ip'],
+            'port #': client['port'],
+            'amount': highest_bid
+        }
+        return msg
 
-        print("Bid Over")
-    
-
-    def sold_to(self):
-        print("Sold to")
-
-    
     def not_sold(self):
-        print("Not Sold")
+        msg = {
+            'type': self.BID_NOTSOLD,
+            'item #': self.item_number,
+            'reason': 'No valid bid made'
+        }
+        return msg
 
 

@@ -25,7 +25,7 @@ def is_ip(ip):
 
 
 def update_txt_file(state, file_name):
-    #print("\nupdate_txt_file() running\n")
+    # print("\nupdate_txt_file() running\n")
     file_name = file_name
     state_ = str(state)
     with open(file_name, 'w') as txt_file:
@@ -36,8 +36,8 @@ def recover_state(file_name):
     with open(file_name, 'r') as my_file:
         data = my_file.read()
         state = ast.literal_eval(data)
-        #print("State's type: {}".format(type(state)))
-        #print(state)
+        # print("State's type: {}".format(type(state)))
+        # print(state)
         return state
 
 
@@ -58,6 +58,8 @@ def top_bidder(name, state):
         if item['open status'] is True and name == item['highest bid'][1]:
             return True
     return False
+
+
 """ state looks like...
     {
     'items closed': [], 
@@ -130,31 +132,44 @@ def get_item_descriptions(state):
     return list_of_items
 
 
-def get_item(portNumber, state):
+def get_item(port_number, state):
     item_for_bid = {}
     for items in state['items']:
         if items['open status'] == 1:
-            if items['port #'] == portNumber:
+            if items['port #'] == port_number:
                 item_for_bid.update(items)
     return item_for_bid
 
 # Function below won't work yet because the port associated with the client connection is
 # not the port nb associated with the client in the state file
 
-def get_bidder_name(portNumber,state):
+
+def get_bidder_name(port_number, state):
     bidder_name = ""
     for client in state['clients']:
-        if client['port'] == portNumber:
+        if client['port'] == port_number:
             bidder_name = client['name']
     return bidder_name
 
 
 def get_highest_bid(item):
-    max_bid_plus_client= item['highest bid']
-    return_value = max_bid_plus_client[0]
-    return return_value
+    max_bid_plus_client = item['highest bid']
+    highest_bid = max_bid_plus_client[0]
+    return highest_bid
 
 
+def get_highest_bidder(item):
+    max_bid_plus_client = item['highest bid']
+    highest_bidder = max_bid_plus_client[1]
+    return highest_bidder
+
+
+def get_client(name, state):
+    for client in state['clients']:
+        if client['name'] == name:
+            return client
+        else:
+            return "Could not locate client"
 
 
 
