@@ -17,6 +17,23 @@ from utils import (dict_to_bytes,
                    get_item_descriptions)
 
 
+# todo MAKE SURE NEW-ITEM MSG'S ONLY GO TO REGISTERED CLIENTS
+# todo we're allowed to identify the user by name, meaning the IP can/should be generated automatcially
+# todo if identify by just name, can bid from any computer, maybe the best system but ip's need to be generated auto
+# todo make sure we can recover state of the system if the server or clients go down
+# todo are we making sure that when items go from open to closed that clients(gui) are getting updated?
+# todo we need to have a log for the server, name, ip, msg sent. put in a txt file
+# todo an assumption we should make is that if the server goes down, whoever is the highest at that time wins, simplest
+# all bids are over at this point, only new offers will start new bidding rounds, this way we don't have to come up
+# with a way to re-establish tcp connections if server goes down and comes back online, clients need to remain registered
+# winners etc all the state should be restored when server comes back online
+# todo we can get bonus points for authentication, just need a pwrd f
+# todo check doc, we need a timeout function for registration msg's or other?
+# todo bonus points give auth code when register and need for bidding, offering?
+# todo crashing the server comes in 2 ways, kill the process or turn off power of computer
+# we need to be 10 min early but don't enter the room
+
+# todo same for when a highest bid is made
 class UDPServer(threading.Thread):
     REGISTER = 'REGISTER'
     REGISTERED = 'REGISTERED'
@@ -66,6 +83,7 @@ class UDPServer(threading.Thread):
             print("###")
             # end of test print statements
             self.udp_socket.sendto(return_msg, return_address)
+            self.update_clients()
         self.udp_socket.close()
         print("UDPServer run function complete. UDP socket connection closed")
 
@@ -178,7 +196,7 @@ class UDPServer(threading.Thread):
                 'port #': item['port #']
             }
             self.send_all_clients(all_clients_msg)
-            self.update_clients()
+            #self.update_clients()
             # WE CREATE A TCP SERVER FOR EVERY ITEM ON OFFER!!
             server_for_item = TCPServer(self.host, item['port #'], self.state, self.state_lock, self.txt_file, response['item #'])
             server_for_item.start()
