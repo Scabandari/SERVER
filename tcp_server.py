@@ -102,9 +102,9 @@ class TCPServer(threading.Thread):
                 pass
 
     def countdown_timer(self):
-        print("Counter has started: 5 minutes till bid close")
+        print("Counter has started: 5 minutes till bid close on item #: " + str(self.item_number))
         sleep(self.count_down)
-        print('5 minutes are over, bid will now close')
+        print('5 minutes are over, bid will now close for item #: '+ str(self.item_number))
         self.handle_end_of_bid()
         highest_bid = get_highest_bid(get_item(self.port, self.state))
         msg = {

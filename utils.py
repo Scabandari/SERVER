@@ -1,6 +1,7 @@
 import json
 import ast
 import ipaddress
+from copy import deepcopy
 
 
 def client_connected(ip_port, connection_list):
@@ -130,6 +131,13 @@ def get_item_descriptions(state):
             }
             list_of_items.update(msg)
     return list_of_items
+# def getItem(portNumber,state):
+#     #port = int(portNumber)
+#     itemForBid = {}
+#     for items in state['items']:
+#         if items['port #'] == portNumber:
+#             itemForBid.update(items)
+#     return itemForBid
 
 
 def get_item(port_number, state):
