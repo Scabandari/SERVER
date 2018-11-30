@@ -22,7 +22,7 @@ AUCTION_TIME = 300  # number of seconds items should be up for bid
 #ipadd = input("Please Enter host IP address: ")
 ipadd = "192.168.1.12"
 #host = ipadd
-host = '192.168.0.107'
+host = '192.168.0.106'
 
 
 udp_port = 5024
