@@ -104,7 +104,7 @@ class TCPServer(threading.Thread):
     def countdown_timer(self):
         print("Counter has started: 5 minutes till bid close on item #: " + str(self.item_number))
         sleep(self.count_down)
-        print('5 minutes are over, bid will now close for item #: '+ str(self.item_number))
+        print('5 minutes are over, bid will now close for item #: '+ str(self.item_number))    
         self.handle_end_of_bid()
         highest_bid = get_highest_bid(get_item(self.port, self.state))
         msg = {
@@ -131,7 +131,9 @@ class TCPServer(threading.Thread):
     def handle_end_of_bid(self):
         return_msg = {}
         item = get_item(self.port, self.state)
-        if item['highest bid'][1] == 'No bids yet':
+        item['open status'] = 0 
+        print(item)
+        if str(item['highest bid'][1]) == 'No bids yet':
             return_msg.update(self.not_sold())
         else:  # send out sold to all and win to only the winning client
             # self.winning_bid(item)
