@@ -281,11 +281,20 @@ class UDPServer(threading.Thread):
     # needs to be modified to find all potential items
     def get_item_port(self, msg):
         items = self.state['items']
-        port = items[0]['port #']
-        msg = {
-            'type': 'ITEMPORT',
-            'port': port
-        }
+        for i in range(0, len(items)):
+            print(items[i]['item #'])
+            print(msg['item'])
+            if int(items[i]['item #']) == int(msg['item']):
+                port = items[i]['port #']
+                msg = {
+                    'type': 'ITEMPORT',
+                    'port': port
+                }
+            else:
+                msg = {
+                    'type': 'ITEMPORT',
+                    'port': 0
+                }
         return msg
 
     def handle_response(self, msg_received):
