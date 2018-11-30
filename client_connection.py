@@ -18,7 +18,7 @@ from utils import (dict_to_bytes,
 # referenced here: https://www.techbeamers.com/python-tutorial-write-multithreaded-python-server/
 
 all_client_messages = [{}]  # if all_client_messages = True
-the_winning_message = []  # if the_winning_message = False : be mindful of the diff between the two syntax
+
 
 class ClientConnection(threading.Thread):
     BID = 'BID'  # when bid is good, meaning its the highest bid
@@ -78,7 +78,7 @@ class ClientConnection(threading.Thread):
         item_for_bid = get_item(self.item_port, self.state)
         curr_max_bid = get_highest_bid(item_for_bid)
         # converting into int to use in comparator
-        if amount <= curr_max_bid:
+        if amount <= int(curr_max_bid):
             response = self.respond_bid(msg_received, amount, False)
         else:  # bid success, item details will now be modified to reflect new information
             response = self.respond_bid(msg_received, amount, True)
@@ -87,7 +87,7 @@ class ClientConnection(threading.Thread):
                 # to the client
                 # name = get_bidder_name(portNumber, state)
                 if item['port #'] == self.item_port:
-                    item['highest bid'] = (amount, "ryan")
+                    item['highest bid'] = (amount, msg_received['name'])
                     # update_txt_file(self.state, self.txt_file)
         return response
 
@@ -143,17 +143,4 @@ class ClientConnection(threading.Thread):
         # self.connect_to_item.sendto(msg.encode('utf-8'), (self.ip, self.item_port))
         # self.connect_to_item.close()
 
-    def check_for_win_thread(self):
-        while True:
-            if the_winning_message:
-                msg = the_winning_message.pop(0)
-                if msg['port #'] == self.item_port:
-                    response = str(msg)
-                    self.connection.send(response.encode('utf-8'))
-                else:
-                    response = {
-                        'type': 'You didnt win',
-                        'reason': 'You too poor'
-                    }
-                    response = str(msg)
-                    self.connection.send(response.encode('utf-8'))
+

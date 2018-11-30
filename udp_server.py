@@ -2,7 +2,7 @@ import threading
 import socket
 import ast
 import time
-from tcp_server import TCPServer
+from tcp_server import TCPServer, the_winning_message
 from utils import (dict_to_bytes,
                    name_registered,
                    update_txt_file,
@@ -67,7 +67,10 @@ class UDPServer(threading.Thread):
 
 
     def run(self):
+        listen_for_winner = threading.Thread(target=self.check_for_win_thread)
+        listen_for_winner.start()
         print("UDP connection started on server side.")
+
         while self.continue_thread:
             data, return_address = self.udp_socket.recvfrom(1024)
             if not client_connected(return_address, self.connected_clients):
@@ -280,11 +283,20 @@ class UDPServer(threading.Thread):
     # needs to be modified to find all potential items
     def get_item_port(self, msg):
         items = self.state['items']
-        port = items[0]['port #']
-        msg = {
-            'type': 'ITEMPORT',
-            'port': port
-        }
+        for i in range(0, len(items)):
+            print(items[i]['item #'])
+            print(msg['item'])
+            if int(items[i]['item #']) == int(msg['item']):
+                port = items[i]['port #']
+                msg = {
+                    'type': 'ITEMPORT',
+                    'port': port
+                }
+            else:
+                msg = {
+                    'type': 'ITEMPORT',
+                    'port': 0
+                }
         return msg
 
     def handle_response(self, msg_received):
@@ -328,3 +340,14 @@ class UDPServer(threading.Thread):
         }
         self.send_all_clients(clients_msg)
 
+    def check_for_win_thread(self):
+        while True:
+            if the_winning_message:
+                msg = the_winning_message.pop(0)
+                test = "172.31.5.102" #hard coded, needs to be updated with the ip of the client!
+                for client in self.connected_clients:
+                    if msg['ip address'] == client[0]: #if a client's ip address is the same, then they are the winner
+                        response = str(msg)
+                        self.udp_socket.sendto(response.encode('utf-8'), client) #send to just the winner
+                    else:
+                        pass
