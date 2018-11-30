@@ -78,7 +78,7 @@ class ClientConnection(threading.Thread):
         item_for_bid = get_item(self.item_port, self.state)
         curr_max_bid = get_highest_bid(item_for_bid)
         # converting into int to use in comparator
-        if amount <= curr_max_bid:
+        if amount <= int(curr_max_bid):
             response = self.respond_bid(msg_received, amount, False)
         else:  # bid success, item details will now be modified to reflect new information
             response = self.respond_bid(msg_received, amount, True)
