@@ -65,7 +65,6 @@ class UDPServer(threading.Thread):
         self.udp_socket.bind((host, port))
         threading.Thread.__init__(self)
 
-    (0, 'REGISTER', "{'name': 'rr', 'type': 'REGISTER', 'ip': '11', 'request': 0, 'port': '22'}")
 
     def run(self):
         listen_for_winner = threading.Thread(target=self.check_for_win_thread)
@@ -180,17 +179,17 @@ class UDPServer(threading.Thread):
         if not name_registered(name, self.state):
             # todo this should check all conditions that lead to failure and last option should be success
             reason = "Name: {} is not registered".format(name)
-            response = self.respond_offer(msg_received, False, reason)
+            response = self.respond_offer(msg_received, False, reason=reason)
         elif not under_three_opens(name, self.state):
             reason = "Cannot have more than 3 items up for bid"
-            response = self.respond_offer(msg_received, False, reason)
+            response = self.respond_offer(msg_received, False, reason=reason)
         else:
             print("Bid starting at time.time(): {}".format(time.time()))
             # todo broadcast new item msg to all registered clients on success
             item_number = self.next_item
             self.next_item += 1
             item = self.offer_success(msg_received, item_number)
-            response = self.respond_offer(msg_received, True, item_number)
+            response = self.respond_offer(msg_received, True, item_number=item_number)
             all_clients_msg = {
                 'type': UDPServer.NEW_ITEM,
                 'description': response['description'],
@@ -262,7 +261,7 @@ class UDPServer(threading.Thread):
             update_txt_file(self.state, self.txt_file)
             print("killing time")
 
-    def respond_offer(self, msg, success, item_number, reason=None):
+    def respond_offer(self, msg, success, item_number=None, reason=None):
         """This function is called to respond to the clients OFFER type msg"""
         if success is True:
             msg = {

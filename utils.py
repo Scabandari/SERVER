@@ -97,7 +97,7 @@ def name_matches_ip(name, ip,  state):
 def has_open_items(name, state):
     """If the client with this name has items open for bid return True"""
     for item in state['items']:
-        if item['open status'] is True and item['seller'] == name:
+        if item['open status'] is 1 and item['seller'] == name:
             return True
     return False
 
