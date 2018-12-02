@@ -1,11 +1,31 @@
 import threading
 from udp_server import UDPServer
 from tcp_server import TCPServer
+from utils import attempt_recover
 
 TEXT_FILE = 'state.txt'
-state = {'clients': [],  # list of dicts: name, ip, port
-         'items': []  # list of dicts: description, min bid, seller, highest bid, open status
-         }
+#udp_connections = None
+
+# # attempt_recover takes the text file, udp_connections, and state
+# # if needs to recover upd_connections = what's in state.txt
+# # state = recover_state
+state_lock = threading.Lock()
+# state = {'clients': [],  # list of dicts: name, ip, port
+#          'items': [],  # list of dicts: description, min bid, seller, highest bid, open status
+#          'udp_connections': []
+#          }
+with state_lock:
+    state, udp_connections, server_crashed = attempt_recover(TEXT_FILE)
+
+crashed_msg = None
+if server_crashed:  # state reset = False means a fresh start and no recovery
+    msg = "Our server seems to have crashed.\nAny items not previously awarded\nto a winner must be resubmitted" \
+    "for bidding\nItem numbering restarted\n\n"
+    crashed_msg = {
+                'type': 'SERVER-CRASHED',
+                'description': msg
+            }
+    # todo SEND MSG TO ALL CLIENTS NOTIFYING OF SERVER CRASH
 
 """  for items above
        item = {
@@ -22,12 +42,12 @@ AUCTION_TIME = 300  # number of seconds items should be up for bid
 #ipadd = input("Please Enter host IP address: ")
 ipadd = "192.168.1.12"
 #host = ipadd
-host = '192.168.0.106'
-
+#host = '192.168.0.106'
+host = '172.31.12.213'
 
 udp_port = 5024
 tcp_port = 5002
-state_lock = threading.Lock()
+
 #send_all_clients = []  # msg queue for msg's that need to be sent to all clients
 #all_clients_lock = threading.Lock()
 
@@ -40,17 +60,10 @@ udp_server = UDPServer(
     port=udp_port,
     state=state,
     state_lock=state_lock,
-    txt_file=TEXT_FILE
+    txt_file=TEXT_FILE,
+    udp_connections=udp_connections,
+    server_crashed_msg=crashed_msg
 )
-"""
-tcp_server = TCPServer(
-    host=host,
-    port=tcp_port,
-    state=state,
-    state_lock=state_lock,
-    txt_file=TEXT_FILE
-)
-"""
+
 udp_server.start()
-#tcp_server.start()
 

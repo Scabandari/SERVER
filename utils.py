@@ -1,8 +1,7 @@
 import json
 import ast
 import ipaddress
-from copy import deepcopy
-
+import os
 
 def client_connected(ip_port, connection_list):
     """
@@ -31,6 +30,41 @@ def update_txt_file(state, file_name):
     state_ = str(state)
     with open(file_name, 'w') as txt_file:
         txt_file.write(state_)
+
+
+def attempt_recover(text_file):
+    # if os.stat(text_file) == 0:
+    #     state = {'clients': [], 'items': [], 'udp_connections': []}
+    #     udp_conns = None
+    #     server_crashed = False
+    # else:
+    #     state = recover_state(text_file)
+    #     udp_conns = state['udp_connections']
+    #     server_crashed = True
+    # return state, udp_conns, server_crashed
+    if os.path.getsize(text_file) > 0:
+        state = recover_state(text_file)
+        for item in state['items']:
+            item['open status'] = 0
+        udp_conns = state['udp_connections']
+        server_crashed = True
+    else:
+        state = {'clients': [], 'items': [], 'udp_connections': []}
+        udp_conns = None
+        server_crashed = False
+    return state, udp_conns, server_crashed
+
+
+
+# # # attempt_recover takes the text file, udp_connections, and state
+# # # if needs to recover upd_connections = what's in state.txt
+# # # state = recover_state
+# state_lock = threading.Lock()
+# state = {'clients': [],  # list of dicts: name, ip, port
+#          'items': [],  # list of dicts: description, min bid, seller, highest bid, open status
+#          'udp_connections': []
+#          }
+# attempt_recover(TEXT_FILE, udp_connections, state, state_lock)
 
 
 def recover_state(file_name):
