@@ -57,7 +57,7 @@ class ClientConnection(threading.Thread):
             return_msg = self.handle_response(msg_received)
             return_msg = dict_to_bytes(return_msg)
             # return_msg = "Nothing yet" #bidding process not complete yet, will crash if activated.
-            self.send_msg(return_msg)
+            # self.send_msg(return_msg)
 
     def handle_response(self, msg_received):
         # Message will always be a bid. What this function will do is check whether to send the Winner and
