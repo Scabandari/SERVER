@@ -43,16 +43,21 @@ def attempt_recover(text_file):
     #     server_crashed = True
     # return state, udp_conns, server_crashed
     if os.path.getsize(text_file) > 0:
+        next_item = 1
         state = recover_state(text_file)
         for item in state['items']:
             item['open status'] = 0
+            if item['item #'] >= next_item:
+                next_item = item['item #'] + 1
         udp_conns = state['udp_connections']
         server_crashed = True
+
     else:
+        next_item = None
         state = {'clients': [], 'items': [], 'udp_connections': []}
         udp_conns = None
         server_crashed = False
-    return state, udp_conns, server_crashed
+    return state, udp_conns, server_crashed, next_item
 
 
 

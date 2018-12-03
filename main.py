@@ -15,12 +15,11 @@ state_lock = threading.Lock()
 #          'udp_connections': []
 #          }
 with state_lock:
-    state, udp_connections, server_crashed = attempt_recover(TEXT_FILE)
+    state, udp_connections, server_crashed, next_item = attempt_recover(TEXT_FILE)
 
 crashed_msg = None
 if server_crashed:  # state reset = False means a fresh start and no recovery
-    msg = "Our server seems to have crashed.\nAny items not previously awarded\nto a winner must be resubmitted" \
-    "for bidding\nItem numbering restarted\n\n"
+    msg = "Our server seems to have crashed.\nAny items not previously awarded\nto a winner must be resubmitted\n\n"
     crashed_msg = {
                 'type': 'SERVER-CRASHED',
                 'description': msg
@@ -62,7 +61,8 @@ udp_server = UDPServer(
     state_lock=state_lock,
     txt_file=TEXT_FILE,
     udp_connections=udp_connections,
-    server_crashed_msg=crashed_msg
+    server_crashed_msg=crashed_msg,
+    next_item=next_item
 )
 
 udp_server.start()
