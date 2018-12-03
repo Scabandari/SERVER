@@ -55,6 +55,8 @@ class ClientConnection(threading.Thread):
             msg_received = ast.literal_eval(msg_received)
             print("Message received from client over tcp: {}".format(data)) # For testing purposes
             return_msg = self.handle_response(msg_received)
+            if type(return_msg) == bool:
+                continue
             return_msg = dict_to_bytes(return_msg)
             # return_msg = "Nothing yet" #bidding process not complete yet, will crash if activated.
             self.send_msg(return_msg)
@@ -81,7 +83,7 @@ class ClientConnection(threading.Thread):
         curr_max_bid = get_highest_bid(item_for_bid)
         # converting into int to use in comparator
         if amount <= int(curr_max_bid):  # todo we're allowed to just do nothing for low bids
-            response = self.respond_bid(msg_received, amount, False)
+            response = False  # self.respond_bid(msg_received, amount, False)
         else:  # bid success, item details will now be modified to reflect new information
             response = self.respond_bid(msg_received, amount, True)
             with self.state_lock:
