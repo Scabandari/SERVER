@@ -215,8 +215,7 @@ def get_client(name, state):
     for client in state['clients']:
         if client['name'] == name:
             return client
-        else:
-            return "Could not locate client"
+    return "Could not locate client"
 
 
 
