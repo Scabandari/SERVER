@@ -34,7 +34,7 @@ class TCPServer(threading.Thread):
         self.tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.tcp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.tcp_socket.bind((host, port))
-        self.tcp_socket.listen(5)
+        self.tcp_socket.listen(6)
         threading.Thread.__init__(self)
 
     def run(self):
