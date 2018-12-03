@@ -76,7 +76,7 @@ class UDPServer(threading.Thread):
         print("UDP connection started on server side.")
 
         while self.continue_thread:
-            data, return_address = self.udp_socket.recvfrom(1024)
+            data, return_address = self.udp_socket.recvfrom(4096)
             if not client_connected(return_address, self.connected_clients):
                 self.connected_clients.append(return_address)
                 with self.state_lock:
