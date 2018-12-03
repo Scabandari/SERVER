@@ -105,12 +105,12 @@ class TCPServer(threading.Thread):
         print("Counter has started: 5 minutes till bid close on item #: " + str(self.item_number))
         sleep(self.count_down)
         print('5 minutes are over, bid will now close for item #: ' + str(self.item_number))
+        self.handle_end_of_bid()
         with self.state_lock:
-            self.handle_end_of_bid()
-            self.state['update_clients'] = 1
-            update_txt_file(self.state, self.txt_file)
+            # self.state['update_clients'] = 1
+            # update_txt_file(self.state, self.txt_file)
             item = get_item(self.port, self.state)
-            highest_bid = get_highest_bid(item)  # TODO STEP INTO IF NOT WORKING
+        highest_bid = get_highest_bid(item)  # TODO STEP INTO IF NOT WORKING
         msg = {
             'type': self.BID_OVER,
             'item #': self.item_number,
@@ -132,18 +132,23 @@ class TCPServer(threading.Thread):
         }
         the_winning_message.append(msg)
 
-    def handle_end_of_bid(self):  # TODO open status not changing?
+    def handle_end_of_bid(self):
+        # with self.state_lock...
         return_msg = {}
-        item = get_item(self.port, self.state)
-        #item['open status'] = 0
-        item_num = item['item #']
-        reset_open_status(item_num, self.state)  # TODO IF THIS ISN'T WORKING STEP THRU
+        with self.state_lock:
+            item = get_item(self.port, self.state)
+            #item['open status'] = 0
+            item_num = item['item #']
+            reset_open_status(item_num, self.state)
+            self.state['update_clients'] = 1
+            update_txt_file(self.state, self.txt_file)
         print(item)
         if str(item['highest bid'][1]) == 'No bids yet':
             return_msg.update(self.not_sold())
         else:  # send out sold to all and win to only the winning client
             self.winning_bid(item)
             return_msg.update(self.sold_to(item))
+        #
         self.send_all_clients.append(return_msg)
 
     def sold_to(self, item):
