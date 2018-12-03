@@ -1,7 +1,7 @@
 import threading
 from time import sleep
 import socket
-from utils import get_item, get_highest_bid, get_highest_bidder, get_client, update_txt_file
+from utils import get_item, get_highest_bid, get_highest_bidder, get_client, update_txt_file, reset_open_status
 from client_connection import ClientConnection, all_client_messages
 
 the_winning_message = []  # if the_winning_message = False : be mindful of the diff between the two syntax
@@ -109,7 +109,8 @@ class TCPServer(threading.Thread):
             self.handle_end_of_bid()
             self.state['update_clients'] = 1
             update_txt_file(self.state, self.txt_file)
-            highest_bid = get_highest_bid(get_item(self.port, self.state))
+            item = get_item(self.port, self.state)
+            highest_bid = get_highest_bid(item)  # TODO STEP INTO IF NOT WORKING
         msg = {
             'type': self.BID_OVER,
             'item #': self.item_number,
@@ -120,7 +121,7 @@ class TCPServer(threading.Thread):
     def winning_bid(self, item):
         highest_bid = get_highest_bid(item)
         highest_bidder = get_highest_bidder(item)
-        client = get_client(highest_bidder, self.state)  # todo step into
+        client = get_client(highest_bidder, self.state)
         msg = {
             'type': self.WIN,
             'item #': self.item_number,
@@ -134,7 +135,9 @@ class TCPServer(threading.Thread):
     def handle_end_of_bid(self):  # TODO open status not changing?
         return_msg = {}
         item = get_item(self.port, self.state)
-        item['open status'] = 0 
+        #item['open status'] = 0
+        item_num = item['item #']
+        reset_open_status(item_num, self.state)  # TODO IF THIS ISN'T WORKING STEP THRU
         print(item)
         if str(item['highest bid'][1]) == 'No bids yet':
             return_msg.update(self.not_sold())

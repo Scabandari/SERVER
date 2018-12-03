@@ -180,12 +180,17 @@ def get_item_descriptions(state):
 
 
 def get_item(port_number, state):
-    item_for_bid = {}
-    for items in state['items']:
-        if items['open status'] == 1:
-            if items['port #'] == port_number:
-                item_for_bid.update(items)
-    return item_for_bid
+    for item in state['items']:
+        if item['port #'] == port_number:
+            return item
+
+    #item_for_bid = {}
+    # for items in state['items']:
+    #     if items['open status'] == 1:
+    #         if items['port #'] == port_number:
+    #             item_for_bid.update(items)
+    # return item_for_bid
+
 
 # Function below won't work yet because the port associated with the client connection is
 # not the port nb associated with the client in the state file
@@ -216,6 +221,13 @@ def get_client(name, state):
         if client['name'] == name:
             return client
     return "Could not locate client"
+
+
+def reset_open_status(item_num, state):
+    items = state['items']
+    for item in items:
+        if item['item #'] == item_num:
+            item['open status'] = 0
 
 
 

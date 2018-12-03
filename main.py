@@ -37,7 +37,7 @@ if server_crashed:  # state reset = False means a fresh start and no recovery
             'port #': self.item_port
         }
 """
-AUCTION_TIME = 300  # number of seconds items should be up for bid
+AUCTION_TIME = 30 # 60   #300  # number of seconds items should be up for bid
 #ipadd = input("Please Enter host IP address: ")
 ipadd = "172.31.5.102"
 #host = ipadd
