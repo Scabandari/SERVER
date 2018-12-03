@@ -131,7 +131,7 @@ class TCPServer(threading.Thread):
         }
         the_winning_message.append(msg)
 
-    def handle_end_of_bid(self):
+    def handle_end_of_bid(self):  # TODO open status not changing?
         return_msg = {}
         item = get_item(self.port, self.state)
         item['open status'] = 0 
