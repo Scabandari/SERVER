@@ -49,7 +49,7 @@ class UDPServer(threading.Thread):
     UPDATE_CLIENTS = 'UPDATE-CLIENTS'
 
     # state will be a dict in main.py must be backed up in .txt file
-    def __init__(self, host, port, state, state_lock, txt_file):
+    def __init__(self, host, port, state, state_lock, txt_file, udp_connections=None, server_crashed_msg=None):
         self.next_item = 1
         self.host = host
         self.port = port
@@ -57,14 +57,16 @@ class UDPServer(threading.Thread):
                                # bound to this port
         self.state = state
         self.txt_file = txt_file
-        self.connected_clients = []  # [(ip, port), (ip, port)...]
+        self.connected_clients = [] if udp_connections is None else udp_connections  # [(ip, port), (ip, port)...]
         self.item_servers = []  # TCPServers created started in own thread and added here
         self.state_lock = state_lock  # locks access to state, update .txt file while lock held
         self.continue_thread = True
         self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.udp_socket.bind((host, port))
+        if server_crashed_msg is not None:
+            self.update_clients()
+            self.send_all_clients(server_crashed_msg)
         threading.Thread.__init__(self)
-
 
     def run(self):
         listen_for_winner = threading.Thread(target=self.check_for_win_thread)
@@ -75,6 +77,8 @@ class UDPServer(threading.Thread):
             data, return_address = self.udp_socket.recvfrom(1024)
             if not client_connected(return_address, self.connected_clients):
                 self.connected_clients.append(return_address)
+                with self.state_lock:
+                    self.state['udp_connections'].append(return_address)
             data = data.decode('ascii')  # data.decode('utf-8')
             msg_received = ast.literal_eval(data)  # unpacked as a dict object
             return_msg = self.handle_response(msg_received)
