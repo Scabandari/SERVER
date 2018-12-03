@@ -24,6 +24,7 @@ class ClientConnection(threading.Thread):
     BID = 'BID'  # when bid is good, meaning its the highest bid
     BID_LOW = 'BID_LOW'
     WIN = 'WIN'
+
     def __init__(self, ip, port, connection, state, state_lock, txt_file, item_port):
         self.ip = ip
         self.port = port
@@ -79,17 +80,21 @@ class ClientConnection(threading.Thread):
         item_for_bid = get_item(self.item_port, self.state)
         curr_max_bid = get_highest_bid(item_for_bid)
         # converting into int to use in comparator
-        if amount <= int(curr_max_bid):
+        if amount <= int(curr_max_bid):  # todo we're allowed to just do nothing for low bids
             response = self.respond_bid(msg_received, amount, False)
         else:  # bid success, item details will now be modified to reflect new information
             response = self.respond_bid(msg_received, amount, True)
-            for item in self.state['items']:
-                # function below just returns "ryan", it won't be implemented until we attach actual port number
-                # to the client
-                # name = get_bidder_name(portNumber, state)
-                if item['port #'] == self.item_port:
-                    item['highest bid'] = (amount, msg_received['name'])
-                    # update_txt_file(self.state, self.txt_file)
+            with self.state_lock:
+                for item in self.state['items']:
+                    # function below just returns "ryan", it won't be implemented until we attach actual port number
+                    # to the client
+                    # name = get_bidder_name(portNumber, state)
+                    if item['port #'] == self.item_port:
+                        item['highest bid'] = (amount, msg_received['name'])  # todo try below
+                        self.state['update_clients'] = 1
+                        update_txt_file(self.state, self.txt_file)
+                        # todo try setting a boolean in self.state, update clients = 1, DONE
+
         return response
 
     def respond_bid(self, msg_received, amount, success):
@@ -107,7 +112,7 @@ class ClientConnection(threading.Thread):
             msg = {
                 'type': 'BID_LOW',
                 'request': msg_received['request'],
-                'minimum bid': msg_received['minimum bid'],
+                #'minimum bid': msg_received['minimum bid'],  no access to 'minimum bid' in msg_received
                 'reason': 'your bid is too low, MO MONEY!'
             }
         return msg
@@ -140,7 +145,7 @@ class ClientConnection(threading.Thread):
             'amount': amount
         }
         global all_client_messages
-        all_client_messages.append(msg)
+        all_client_messages.append(msg)  # todo what does this do? nothing is sending these msg's
         # self.connect_to_item.sendto(msg.encode('utf-8'), (self.ip, self.item_port))
         # self.connect_to_item.close()
 

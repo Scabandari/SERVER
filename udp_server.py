@@ -49,8 +49,8 @@ class UDPServer(threading.Thread):
     UPDATE_CLIENTS = 'UPDATE-CLIENTS'
 
     # state will be a dict in main.py must be backed up in .txt file
-    def __init__(self, host, port, state, state_lock, txt_file, udp_connections=None, server_crashed_msg=None):
-        self.next_item = 1
+    def __init__(self, host, port, state, state_lock, txt_file, udp_connections=None, server_crashed_msg=None, next_item=None,):
+        self.next_item = next_item if next_item is not None else 1
         self.host = host
         self.port = port
         self.item_port = 5050  # the next port to assign for an item on offer, clients connect here to a TCPServer
@@ -71,6 +71,8 @@ class UDPServer(threading.Thread):
     def run(self):
         listen_for_winner = threading.Thread(target=self.check_for_win_thread)
         listen_for_winner.start()
+        listen_for_updates = threading.Thread(target=self.check_update_clients)
+        listen_for_updates.start()
         print("UDP connection started on server side.")
 
         while self.continue_thread:
@@ -350,3 +352,10 @@ class UDPServer(threading.Thread):
                         self.udp_socket.sendto(response.encode('utf-8'), client) #send to just the winner
                     else:
                         pass
+
+    def check_update_clients(self):
+        with self.state_lock:
+            if self.state['update_clients'] == 1:
+                self.state['update_clients'] = 0
+                self.update_clients()
+                update_txt_file(self.state, self.txt_file)

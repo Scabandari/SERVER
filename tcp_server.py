@@ -1,7 +1,7 @@
 import threading
 from time import sleep
 import socket
-from utils import get_item, get_highest_bid, get_highest_bidder, get_client
+from utils import get_item, get_highest_bid, get_highest_bidder, get_client, update_txt_file
 from client_connection import ClientConnection, all_client_messages
 
 the_winning_message = []  # if the_winning_message = False : be mindful of the diff between the two syntax
@@ -104,9 +104,12 @@ class TCPServer(threading.Thread):
     def countdown_timer(self):
         print("Counter has started: 5 minutes till bid close on item #: " + str(self.item_number))
         sleep(self.count_down)
-        print('5 minutes are over, bid will now close for item #: '+ str(self.item_number))    
-        self.handle_end_of_bid()
-        highest_bid = get_highest_bid(get_item(self.port, self.state))
+        print('5 minutes are over, bid will now close for item #: ' + str(self.item_number))
+        with self.state_lock:
+            self.handle_end_of_bid()
+            self.state['update_clients'] = 1
+            update_txt_file(self.state, self.txt_file)
+            highest_bid = get_highest_bid(get_item(self.port, self.state))
         msg = {
             'type': self.BID_OVER,
             'item #': self.item_number,
@@ -117,7 +120,7 @@ class TCPServer(threading.Thread):
     def winning_bid(self, item):
         highest_bid = get_highest_bid(item)
         highest_bidder = get_highest_bidder(item)
-        client = get_client(highest_bidder, self.state)
+        client = get_client(highest_bidder, self.state)  # todo step into
         msg = {
             'type': self.WIN,
             'item #': self.item_number,
