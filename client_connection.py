@@ -51,6 +51,7 @@ class ClientConnection(threading.Thread):
                 # print("Data is not correct")
                 break
             msg_received = ast.literal_eval(data)
+            msg_received = ast.literal_eval(msg_received)
             print("Message received from client over tcp: {}".format(data)) # For testing purposes
             return_msg = self.handle_response(msg_received)
             return_msg = dict_to_bytes(return_msg)
@@ -60,7 +61,7 @@ class ClientConnection(threading.Thread):
     def handle_response(self, msg_received):
         # Message will always be a bid. What this function will do is check whether to send the Winner and
         # the highest bid messages, in addition to the general bid confirmed message
-        print("msg_received: {}".format(str(msg_received)))  # FOR TESTING PURPOSES
+        # print("This is the msg_received: {}".format(str(msg_received)))  # FOR TESTING PURPOSES
         type_ = msg_received['type']
         # Only one type but this format makes it easy to scale if we want
         # to add more functionality

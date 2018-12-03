@@ -39,10 +39,12 @@ if server_crashed:  # state reset = False means a fresh start and no recovery
 """
 AUCTION_TIME = 300  # number of seconds items should be up for bid
 #ipadd = input("Please Enter host IP address: ")
-ipadd = "192.168.1.12"
+ipadd = "172.31.5.102"
 #host = ipadd
+
 #host = '192.168.0.106'
 host = '192.168.0.106 '
+
 
 udp_port = 5024
 tcp_port = 5002
