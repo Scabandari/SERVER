@@ -54,7 +54,7 @@ def attempt_recover(text_file):
 
     else:
         next_item = None
-        state = {'clients': [], 'items': [], 'udp_connections': []}
+        state = {'clients': [], 'items': [], 'udp_connections': [], 'update_clients': 0}
         udp_conns = None
         server_crashed = False
     return state, udp_conns, server_crashed, next_item

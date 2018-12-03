@@ -71,6 +71,8 @@ class UDPServer(threading.Thread):
     def run(self):
         listen_for_winner = threading.Thread(target=self.check_for_win_thread)
         listen_for_winner.start()
+        listen_for_updates = threading.Thread(target=self.check_update_clients)
+        listen_for_updates.start()
         print("UDP connection started on server side.")
 
         while self.continue_thread:
@@ -350,3 +352,10 @@ class UDPServer(threading.Thread):
                         self.udp_socket.sendto(response.encode('utf-8'), client) #send to just the winner
                     else:
                         pass
+
+    def check_update_clients(self):
+        with self.state_lock:
+            if self.state['update_clients'] == 1:
+                self.state['update_clients'] = 0
+                self.update_clients()
+                update_txt_file(self.state, self.txt_file)
