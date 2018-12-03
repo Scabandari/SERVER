@@ -26,7 +26,7 @@ class TCPServer(threading.Thread):
         self.all_clients_lock = threading.Lock()
         self.state_lock = state_lock  # locks access to state, update .txt file while lock held
         self.connection_list = []
-        self.count_down = 100  # change to 300 for five min auction
+        self.count_down = 30  # 100  # change to 300 for five min auction
         self.item_number = item_number
         self.messages = []  # list of msg's or dicts sent from clients over tcp
         self.continue_thread = True  # set to False if we want to terminate thread
@@ -132,18 +132,20 @@ class TCPServer(threading.Thread):
         }
         the_winning_message.append(msg)
 
-    def handle_end_of_bid(self):  # TODO open status not changing?
+    def handle_end_of_bid(self):
+        # with self.state_lock...
         return_msg = {}
         item = get_item(self.port, self.state)
         #item['open status'] = 0
         item_num = item['item #']
-        reset_open_status(item_num, self.state)  # TODO IF THIS ISN'T WORKING STEP THRU
+        reset_open_status(item_num, self.state)
         print(item)
         if str(item['highest bid'][1]) == 'No bids yet':
             return_msg.update(self.not_sold())
         else:  # send out sold to all and win to only the winning client
             self.winning_bid(item)
             return_msg.update(self.sold_to(item))
+        #
         self.send_all_clients.append(return_msg)
 
     def sold_to(self, item):
