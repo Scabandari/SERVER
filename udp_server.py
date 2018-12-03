@@ -83,11 +83,6 @@ class UDPServer(threading.Thread):
             msg_received = ast.literal_eval(data)  # unpacked as a dict object
             return_msg = self.handle_response(msg_received)
             return_msg = dict_to_bytes(return_msg)
-            # used to test whether the return message is as expected
-            print("###")
-            print(return_msg)
-            print("###")
-            # end of test print statements
             self.udp_socket.sendto(return_msg, return_address)
             self.update_clients()
         self.udp_socket.close()
