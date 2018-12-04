@@ -150,6 +150,8 @@ class TCPServer(threading.Thread):
             return_msg.update(self.sold_to(item))
         #
         self.send_all_clients.append(return_msg)
+        for sock in self.connection_list:
+            sock.join()
 
     def sold_to(self, item):
         highest_bid = get_highest_bid(item)
